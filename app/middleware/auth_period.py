@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.core.config import get_settings
 from app.db.session import AsyncSessionLocal
-from app.services.auth import decode_access_token, get_user_by_id, is_user_available
+from app.services.auth import create_access_token, decode_access_token, get_user_by_id, is_user_available
 
 
 settings = get_settings()
@@ -17,6 +17,11 @@ PUBLIC_PATHS = {
     "/api/auth/login",
     "/docs",
     "/openapi.json",
+}
+
+LOGOUT_PATHS = {
+    "/logout",
+    "/api/auth/logout",
 }
 
 
@@ -44,7 +49,18 @@ async def auth_period_middleware(
         if user is None or not is_user_available(user):
             return unauthorized_response(request)
 
-    return await call_next(request)
+    response = await call_next(request)
+    if request.url.path in LOGOUT_PATHS:
+        return response
+
+    response.set_cookie(
+        key=settings.auth_cookie_name,
+        value=create_access_token(user),
+        max_age=settings.access_token_expire_minutes * 60,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
 def unauthorized_response(request: Request) -> Response:

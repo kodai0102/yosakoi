@@ -107,6 +107,12 @@ docker compose exec app python -m app.scripts.create_initial_admin
 http://localhost:8000/login
 ```
 
+## セッション有効期限
+
+ログイン状態はサーバー側セッションではなく、JWTをHttpOnly Cookieへ保存して管理します。
+`ACCESS_TOKEN_EXPIRE_MINUTES` の時間だけ無操作が続くとCookie/JWTが期限切れになり、次回アクセス時にログイン画面へ戻ります。
+操作中はアクセスごとにCookie/JWTを更新します。
+
 ## 停止
 
 ```bash
