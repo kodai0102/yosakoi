@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>CSV一括登録</h1>
+<form method="post" action="/admin/users/import" enctype="multipart/form-data">
+  <label>
+    CSVファイル
+    <input type="file" name="file" accept=".csv,text/csv" required>
+  </label>
+  <label>
+    共通初期パスワード
+    <input type="password" name="initial_password" minlength="8" required>
+  </label>
+  <button type="submit">登録</button>
+</form>
+
+{% if result %}
+  <h2>登録結果</h2>
+  <ul>
+    <li>作成: {{ result.created_count }}</li>
+    <li>スキップ: {{ result.skipped_count }}</li>
+    <li>エラー: {{ result.errors | length }}</li>
+  </ul>
+{% endif %}
+{% endblock %}

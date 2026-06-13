@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>ユーザー管理</h1>
+<p><a href="/admin/users/new">ユーザー作成</a> / <a href="/admin/users/import">CSV一括登録</a></p>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>ログインID</th>
+      <th>表示名</th>
+      <th>権限</th>
+      <th>有効</th>
+      <th>利用期間</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+      <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.login_id }}</td>
+        <td>{{ user.display_name }}</td>
+        <td>{{ user.role }}</td>
+        <td>{{ "有効" if user.is_active else "無効" }}</td>
+        <td>{{ user.valid_from }} - {{ user.valid_to }}</td>
+        <td><a href="/admin/users/{{ user.id }}/edit">編集</a></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
