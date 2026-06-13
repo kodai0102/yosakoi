@@ -1,32 +1,59 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>ユーザー管理</h1>
-<p><a href="/admin/users/new">ユーザー作成</a> / <a href="/admin/users/import">CSV一括登録</a></p>
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>ログインID</th>
-      <th>表示名</th>
-      <th>権限</th>
-      <th>有効</th>
-      <th>利用期間</th>
-      <th>操作</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for user in users %}
+<div class="page-header">
+  <div>
+    <h1>ユーザー管理</h1>
+    <p class="page-description">ログイン可能なメンバー、権限、利用期間を管理します。</p>
+  </div>
+  <div class="nav-links">
+    <a class="button" href="/admin/users/new">ユーザー作成</a>
+    <a class="button button-secondary" href="/admin/users/import">CSV一括登録</a>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-body">
+    <div class="toolbar">
+      <strong>登録ユーザー</strong>
+      <span class="meta">{{ users | length }}件</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>ログインID</th>
+            <th>表示名</th>
+            <th>権限</th>
+            <th>状態</th>
+            <th>利用開始</th>
+            <th>利用終了</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
       <tr>
         <td>{{ user.id }}</td>
         <td>{{ user.login_id }}</td>
         <td>{{ user.display_name }}</td>
         <td>{{ user.role }}</td>
-        <td>{{ "有効" if user.is_active else "無効" }}</td>
-        <td>{{ user.valid_from }} - {{ user.valid_to }}</td>
-        <td><a href="/admin/users/{{ user.id }}/edit">編集</a></td>
+        <td>
+          {% if user.is_active %}
+            <span class="badge badge-success">有効</span>
+          {% else %}
+            <span class="badge badge-muted">無効</span>
+          {% endif %}
+        </td>
+        <td>{{ user.valid_from.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ user.valid_to.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td><a class="button button-secondary" href="/admin/users/{{ user.id }}/edit">編集</a></td>
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 {% endblock %}

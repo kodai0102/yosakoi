@@ -1,25 +1,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>CSV一括登録</h1>
-<form method="post" action="/admin/users/import" enctype="multipart/form-data">
-  <label>
-    CSVファイル
-    <input type="file" name="file" accept=".csv,text/csv" required>
-  </label>
-  <label>
-    共通初期パスワード
-    <input type="password" name="initial_password" minlength="8" required>
-  </label>
-  <button type="submit">登録</button>
-</form>
+<div class="page-header">
+  <div>
+    <h1>CSV一括登録</h1>
+    <p class="page-description">CSVからメンバーをまとめて登録します。</p>
+  </div>
+  <a class="button button-secondary" href="/admin/users">一覧へ戻る</a>
+</div>
 
-{% if result %}
-  <h2>登録結果</h2>
-  <ul>
-    <li>作成: {{ result.created_count }}</li>
-    <li>スキップ: {{ result.skipped_count }}</li>
-    <li>エラー: {{ result.errors | length }}</li>
-  </ul>
-{% endif %}
+<section class="panel">
+  <div class="panel-body">
+    <form method="post" action="/admin/users/import" enctype="multipart/form-data">
+      <div class="form-grid">
+        <label>
+          CSVファイル
+          <input type="file" name="file" accept=".csv,text/csv" required>
+        </label>
+        <label>
+          共通初期パスワード
+          <input type="password" name="initial_password" minlength="8" required>
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="submit">登録</button>
+      </div>
+    </form>
+
+    {% if result %}
+      <div class="toolbar" style="margin-top: 18px;">
+        <strong>登録結果</strong>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><th>作成</th><td>{{ result.created_count }}</td></tr>
+            <tr><th>スキップ</th><td>{{ result.skipped_count }}</td></tr>
+            <tr><th>エラー</th><td>{{ result.errors | length }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}
