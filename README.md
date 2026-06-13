@@ -26,6 +26,26 @@ docker compose up --build
 docker compose up -d --build
 ```
 
+## DB 接続情報
+
+DB接続情報は `.env` に集約しています。Docker Compose からは `.env` の環境変数を参照します。
+
+ローカルPCのDBクライアントから接続する場合:
+
+```text
+Host: 127.0.0.1
+Port: 5432
+Database: yosakoi
+User: yosakoi
+Password: yosakoi
+```
+
+アプリコンテナから接続する場合:
+
+```text
+DATABASE_URL=postgresql+asyncpg://yosakoi:yosakoi@db:5432/yosakoi
+```
+
 ## Health Check API
 
 アプリケーションの起動確認:
