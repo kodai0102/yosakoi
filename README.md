@@ -118,3 +118,20 @@ DB ボリュームも削除する場合:
 ```bash
 docker compose down -v
 ```
+
+## テーブル構成
+
+### ユーザーアカウントテーブル
+名称：dept_user
+概要：ユーザーの個人情報やID、パスワードを管理
+カラム案：user_no, user_id, user_name, password, create_date, start_date, end_date
+補足：create_date, start_date, end_date は日時型
+主キー：user_no, user_id,
+
+### アクセスログテーブル
+名称：access_log
+概要：ユーザーのログオン時間、ログオフ時間、写真ダウンロード時間、ダウンロードした写真、お気に入りの情報を管理
+カラム案：rireki_no, user_name, user_id, logon_time, logoff_time, pic_download_time, pic_download_list, favorite
+補足：logon_time, logoff_time, pic_download_time は dept_user.create_date と同じ日時型
+主キー：rireki_no
+外部キー：user_id

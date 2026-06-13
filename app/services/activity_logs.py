@@ -9,8 +9,8 @@ from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
 
 
-def current_activity_time() -> str:
-    return datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y%m%d%H%M")
+def current_activity_time() -> datetime:
+    return datetime.now(ZoneInfo("Asia/Tokyo"))
 
 
 async def record_activity(
