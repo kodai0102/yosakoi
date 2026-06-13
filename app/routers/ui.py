@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.dependencies.auth import get_current_user, require_admin
-from app.models.user import User
+from app.models.dept_user import DeptUser
 
 router = APIRouter(tags=["ui"])
 templates = Jinja2Templates(directory="app/templates")
@@ -56,7 +56,7 @@ def sample_photos() -> list[dict[str, object]]:
 @router.get("/albums", response_class=HTMLResponse)
 async def albums_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "home.html",
@@ -68,7 +68,7 @@ async def albums_page(
 async def album_photos_page(
     request: Request,
     album_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     albums = sample_albums()
     album = next((item for item in albums if item["id"] == album_id), albums[0])
@@ -87,7 +87,7 @@ async def album_photos_page(
 async def photo_detail_page(
     request: Request,
     photo_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "photo_detail.html",
@@ -103,7 +103,7 @@ async def photo_detail_page(
 @router.get("/favorites", response_class=HTMLResponse)
 async def favorites_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "favorites.html",
@@ -114,7 +114,7 @@ async def favorites_page(
 @router.get("/tags", response_class=HTMLResponse)
 async def tag_search_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "tag_search.html",
@@ -130,7 +130,7 @@ async def tag_search_page(
 @router.get("/search", response_class=HTMLResponse)
 async def search_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "search.html",
@@ -146,7 +146,7 @@ async def search_page(
 @router.get("/downloads", response_class=HTMLResponse)
 async def downloads_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "downloads.html",
@@ -157,7 +157,7 @@ async def downloads_page(
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard_page(
     request: Request,
-    current_user: User = Depends(require_admin),
+    current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "admin/dashboard.html", {"request": request, "current_user": current_user}
@@ -167,7 +167,7 @@ async def admin_dashboard_page(
 @router.get("/admin/albums", response_class=HTMLResponse)
 async def admin_albums_page(
     request: Request,
-    current_user: User = Depends(require_admin),
+    current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "admin/albums.html",
@@ -179,7 +179,7 @@ async def admin_albums_page(
 async def admin_photos_page(
     request: Request,
     album_id: int,
-    current_user: User = Depends(require_admin),
+    current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "admin/photos.html",
@@ -195,7 +195,7 @@ async def admin_photos_page(
 @router.get("/admin/tags", response_class=HTMLResponse)
 async def admin_tags_page(
     request: Request,
-    current_user: User = Depends(require_admin),
+    current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "admin/tags.html",
@@ -210,7 +210,7 @@ async def admin_tags_page(
 @router.get("/admin/logs", response_class=HTMLResponse)
 async def admin_logs_page(
     request: Request,
-    current_user: User = Depends(require_admin),
+    current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     logs = [
         {

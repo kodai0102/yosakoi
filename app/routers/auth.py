@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
-from app.models.user import User
+from app.models.dept_user import DeptUser
 from app.schemas.auth import LoginRequest
 from app.services.activity_logs import record_activity
 from app.services.auth import authenticate_user, create_access_token
@@ -33,7 +33,7 @@ def clear_auth_cookie(response: Response) -> None:
 @router.get("/", response_class=HTMLResponse)
 async def index(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     return templates.TemplateResponse(
         "home.html", {"request": request, "current_user": current_user}
@@ -80,7 +80,7 @@ async def login_form(
 @router.post("/logout")
 async def logout(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     await record_activity(db, request, "logout", user=current_user)
@@ -137,7 +137,7 @@ async def api_login(
 @router.post("/api/auth/logout")
 async def api_logout(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: DeptUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
     await record_activity(db, request, "logout", user=current_user)
@@ -147,7 +147,7 @@ async def api_logout(
 
 
 @router.get("/api/auth/me")
-async def api_me(current_user: User = Depends(get_current_user)) -> dict[str, object]:
+async def api_me(current_user: DeptUser = Depends(get_current_user)) -> dict[str, object]:
     return {
         "success": True,
         "data": {

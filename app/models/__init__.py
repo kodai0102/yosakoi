@@ -1,4 +1,4 @@
-from app.models.activity_log import ActivityLog
-from app.models.user import User
+from app.models.access_log import AccessLog
+from app.models.dept_user import DeptUser
 
-__all__ = ["ActivityLog", "User"]
+__all__ = ["AccessLog", "DeptUser"]

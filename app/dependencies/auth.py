@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.db.session import get_db
-from app.models.user import User
+from app.models.dept_user import DeptUser
 from app.services.auth import decode_access_token, get_user_by_id, is_user_available
 
 
@@ -12,7 +12,7 @@ settings = get_settings()
 
 async def get_current_user(
     request: Request, db: AsyncSession = Depends(get_db)
-) -> User:
+) -> DeptUser:
     token = request.cookies.get(settings.auth_cookie_name)
     if not token:
         raise HTTPException(
@@ -41,7 +41,7 @@ async def get_current_user(
     return user
 
 
-async def require_admin(current_user: User = Depends(get_current_user)) -> User:
+async def require_admin(current_user: DeptUser = Depends(get_current_user)) -> DeptUser:
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
