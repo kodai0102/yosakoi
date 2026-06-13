@@ -259,6 +259,13 @@
         margin-bottom: 16px;
       }
 
+      .nav-links {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
       .filter-bar {
         display: grid;
         gap: 12px;
@@ -542,6 +549,138 @@
         padding: 7px 12px;
       }
 
+      .mini-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .mini-item {
+        align-items: center;
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        padding: 12px;
+      }
+
+      .mini-thumb {
+        aspect-ratio: 1 / 1;
+        background:
+          linear-gradient(135deg, rgba(91, 53, 213, 0.22), rgba(255,255,255,0.08)),
+          linear-gradient(45deg, #111827, #ef476f 46%, #ffd166);
+        border-radius: 8px;
+        flex: 0 0 54px;
+      }
+
+      .photo-grid {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .photo-tile {
+        aspect-ratio: 1 / 1;
+        background:
+          linear-gradient(135deg, rgba(91, 53, 213, 0.24), rgba(255,255,255,0.08)),
+          linear-gradient(45deg, #111827, #ef476f 46%, #ffd166);
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(30, 24, 70, 0.08);
+        display: block;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .photo-tile:nth-child(3n) {
+        background:
+          linear-gradient(135deg, rgba(91, 53, 213, 0.16), rgba(255,255,255,0.1)),
+          linear-gradient(45deg, #2f80ed, #ffffff 46%, #f06595);
+      }
+
+      .photo-tile:nth-child(4n) {
+        background:
+          linear-gradient(135deg, rgba(91, 53, 213, 0.18), rgba(255,255,255,0.12)),
+          linear-gradient(45deg, #12b886, #ffd43b 46%, #e03131);
+      }
+
+      .photo-favorite {
+        background: rgba(255,255,255,0.9);
+        border-radius: 999px;
+        color: var(--brand);
+        font-weight: 800;
+        padding: 4px 7px;
+        position: absolute;
+        right: 8px;
+        top: 8px;
+      }
+
+      .photo-detail-layout {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1fr) 320px;
+      }
+
+      .photo-hero {
+        aspect-ratio: 4 / 3;
+        background:
+          linear-gradient(135deg, rgba(91, 53, 213, 0.18), transparent),
+          linear-gradient(45deg, #111827, #f06595 52%, #fff);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+      }
+
+      .stats-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 22px;
+      }
+
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .stat-value {
+        display: block;
+        font-size: 28px;
+        font-weight: 850;
+      }
+
+      .stat-label {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .split-grid {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .admin-menu {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .admin-menu a {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 8px;
+        padding: 18px;
+      }
+
+      .admin-menu strong {
+        font-size: 16px;
+      }
+
       .bottom-nav {
         display: none;
       }
@@ -559,6 +698,10 @@
         .album-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .album-page { display: block; }
         .detail-panel { display: none; }
+        .photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .photo-detail-layout { grid-template-columns: 1fr; }
+        .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .admin-menu { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .filter-bar { grid-template-columns: 1fr auto; }
         .filter-bar label:nth-child(2) { grid-column: 1 / -1; order: 3; }
         .page-title { font-size: 18px; }
@@ -603,6 +746,9 @@
         }
         .form-grid { grid-template-columns: 1fr; }
         .album-grid { gap: 12px; }
+        .photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .split-grid { grid-template-columns: 1fr; }
+        .admin-menu { grid-template-columns: 1fr; }
         .album-title { font-size: 14px; }
         .album-body { padding: 10px; }
         h1 { font-size: 26px; }
@@ -621,19 +767,19 @@
             </span>
           </a>
           <nav class="side-nav">
-            <a class="nav-link active" href="/">
+            <a class="nav-link active" href="/albums">
               <span class="nav-icon">▣</span>
               アルバム一覧
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="/favorites">
               <span class="nav-icon">♡</span>
               お気に入り
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="/tags">
               <span class="nav-icon">⌕</span>
               タグ検索
             </a>
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="/downloads">
               <span class="nav-icon">⇩</span>
               ダウンロード履歴
             </a>
@@ -641,6 +787,10 @@
               <a class="nav-link" href="/admin/users">
                 <span class="nav-icon">⚙</span>
                 ユーザー管理
+              </a>
+              <a class="nav-link" href="/admin/albums">
+                <span class="nav-icon">▤</span>
+                アルバム管理
               </a>
             {% endif %}
           </nav>
@@ -674,10 +824,10 @@
             {% block content %}{% endblock %}
           </main>
           <nav class="bottom-nav">
-            <a class="active" href="#"><span>▣</span><span>アルバム</span></a>
-            <a href="#"><span>♡</span><span>お気に入り</span></a>
-            <a href="#"><span>⌕</span><span>検索</span></a>
-            <a href="#"><span>☰</span><span>メニュー</span></a>
+            <a class="active" href="/albums"><span>▣</span><span>アルバム</span></a>
+            <a href="/favorites"><span>♡</span><span>お気に入り</span></a>
+            <a href="/search"><span>⌕</span><span>検索</span></a>
+            <a href="/admin"><span>☰</span><span>メニュー</span></a>
           </nav>
         </section>
       </div>

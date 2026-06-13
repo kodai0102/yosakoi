@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block page_title %}写真管理{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>写真管理</h1>
+    <p class="page-description">{{ album.title }} / 写真の一覧とタグ付け状態を確認します。</p>
+  </div>
+  <div class="nav-links">
+    <a class="button button-secondary" href="/admin/albums">アルバム管理へ</a>
+    <button type="button">写真アップロード</button>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-body">
+    <div class="toolbar">
+      <div class="nav-links">
+        <input aria-label="写真検索" placeholder="ファイル名で検索">
+        <select aria-label="タグ状態">
+          <option>すべて</option>
+          <option>タグあり</option>
+          <option>タグなし</option>
+        </select>
+      </div>
+      <span class="meta">{{ photos | length }}枚</span>
+    </div>
+    <div class="photo-grid">
+      {% for photo in photos %}
+        <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.title }}">
+          <span class="photo-favorite">{{ photo.id }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

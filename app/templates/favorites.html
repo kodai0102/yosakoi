@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block page_title %}お気に入り{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>お気に入り</h1>
+    <p class="page-description">後から見返したい写真をまとめて確認できます。</p>
+  </div>
+</div>
+
+<div class="photo-grid">
+  {% for photo in photos %}
+    <a class="photo-tile" href="/photos/{{ photo.id }}">
+      <span class="photo-favorite">♥</span>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block page_title %}アルバム管理{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>アルバム管理</h1>
+    <p class="page-description">アルバムの公開状態、公開期間、写真枚数を確認します。</p>
+  </div>
+  <button type="button">アルバム作成</button>
+</div>
+
+<section class="panel">
+  <div class="panel-body">
+    <div class="toolbar">
+      <div class="nav-links">
+        <select aria-label="公開状態">
+          <option>すべての状態</option>
+          <option>公開中</option>
+          <option>終了</option>
+        </select>
+        <input aria-label="アルバム検索" placeholder="アルバム名で検索">
+      </div>
+      <span class="meta">{{ albums | length }}件</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>アルバム</th>
+            <th>公開期間</th>
+            <th>写真枚数</th>
+            <th>タグ</th>
+            <th>状態</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for album in albums %}
+            <tr>
+              <td>
+                <strong>{{ album.title }}</strong><br>
+                <span class="meta">ID: {{ album.id }}</span>
+              </td>
+              <td>{{ album.period }}</td>
+              <td>{{ album.count }}枚</td>
+              <td>
+                <div class="tag-list">
+                  {% for tag in album.tags[:3] %}
+                    <span class="tag-pill">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+              </td>
+              <td>
+                {% if album.status == "公開中" %}
+                  <span class="badge badge-success">公開中</span>
+                {% else %}
+                  <span class="badge badge-muted">終了</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="nav-links">
+                  <a class="button button-secondary" href="/admin/albums/{{ album.id }}/photos">写真</a>
+                  <button class="button-secondary" type="button">編集</button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

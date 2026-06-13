@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ album.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ album.title }}</h1>
+    <p class="page-description">{{ album.period }} / {{ album.count }}枚</p>
+  </div>
+  <a class="button button-secondary" href="/albums">アルバム一覧へ</a>
+</div>
+
+<div class="toolbar">
+  <div class="tag-list">
+    <span class="tag-pill">写真一覧</span>
+    <span class="tag-pill">情報</span>
+  </div>
+  <div class="nav-links">
+    <button class="button-secondary" type="button">絞り込み</button>
+    <button class="button-secondary" type="button">並び替え</button>
+  </div>
+</div>
+
+<div class="photo-grid">
+  {% for photo in photos %}
+    <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.title }}">
+      <span class="photo-favorite">♡</span>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

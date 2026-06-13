@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block page_title %}管理メニュー{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>管理メニュー</h1>
+    <p class="page-description">ユーザー、アルバム、タグ、操作ログを確認します。</p>
+  </div>
+</div>
+
+<section class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-value">18</span>
+    <span class="stat-label">登録ユーザー</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">6</span>
+    <span class="stat-label">公開アルバム</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">1,214</span>
+    <span class="stat-label">写真枚数</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value">24</span>
+    <span class="stat-label">タグ数</span>
+  </div>
+</section>
+
+<nav class="admin-menu">
+  <a href="/admin/users">
+    <strong>ユーザー管理</strong>
+    <span class="meta">メンバー作成、CSV一括登録、利用期間管理</span>
+  </a>
+  <a href="/admin/albums">
+    <strong>アルバム管理</strong>
+    <span class="meta">公開状態、期間、写真枚数の確認</span>
+  </a>
+  <a href="/admin/tags">
+    <strong>タグ管理</strong>
+    <span class="meta">写真検索に使うタグの確認</span>
+  </a>
+  <a href="/admin/logs">
+    <strong>操作ログ</strong>
+    <span class="meta">ログイン、登録、ダウンロード履歴の確認</span>
+  </a>
+</nav>
+
+<div class="split-grid" style="margin-top: 22px;">
+  <section class="panel">
+    <div class="panel-body">
+      <div class="toolbar">
+        <strong>最近のアルバム</strong>
+        <a class="button button-secondary" href="/admin/albums">一覧</a>
+      </div>
+      <div class="mini-list">
+        <div class="mini-item">
+          <span class="mini-thumb"></span>
+          <span>
+            <strong>第25回 どまつり</strong><br>
+            <span class="meta">公開中 / 245枚</span>
+          </span>
+          <span class="badge badge-success">公開中</span>
+        </div>
+        <div class="mini-item">
+          <span class="mini-thumb"></span>
+          <span>
+            <strong>よさこい祭り 2025</strong><br>
+            <span class="meta">公開中 / 312枚</span>
+          </span>
+          <span class="badge badge-success">公開中</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-body">
+      <div class="toolbar">
+        <strong>最近の操作</strong>
+        <a class="button button-secondary" href="/admin/logs">ログ</a>
+      </div>
+      <div class="mini-list">
+        <div class="mini-item">
+          <span>
+            <strong>login_success</strong><br>
+            <span class="meta">管理者 / 2026/06/13 17:10</span>
+          </span>
+          <span class="badge badge-muted">認証</span>
+        </div>
+        <div class="mini-item">
+          <span>
+            <strong>user_create</strong><br>
+            <span class="meta">管理者 / 2026/06/13 17:00</span>
+          </span>
+          <span class="badge badge-muted">管理</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

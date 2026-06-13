@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block page_title %}ダウンロード履歴{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>ダウンロード履歴</h1>
+    <p class="page-description">保存済みの写真を確認できます。</p>
+  </div>
+</div>
+<section class="panel">
+  <div class="panel-body">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>写真</th><th>アルバム</th><th>ダウンロード日時</th><th>操作</th></tr></thead>
+        <tbody>
+          {% for photo in photos %}
+            <tr>
+              <td>{{ photo.title }}</td>
+              <td>第25回 どまつり</td>
+              <td>2026/06/13 17:{{ "%02d"|format(photo.id) }}</td>
+              <td><a class="button button-secondary" href="/photos/{{ photo.id }}">表示</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

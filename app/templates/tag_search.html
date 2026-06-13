@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block page_title %}タグ検索{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>タグ検索</h1>
+    <p class="page-description">踊り子名や役割タグから写真を探します。</p>
+  </div>
+</div>
+
+<section class="panel" style="margin-bottom: 22px;">
+  <div class="panel-body">
+    <div class="tag-list">
+      {% for tag in tags %}
+        <a class="tag-pill" href="/tags">{{ tag }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="photo-grid">
+  {% for photo in photos %}
+    <a class="photo-tile" href="/photos/{{ photo.id }}"></a>
+  {% endfor %}
+</div>
+{% endblock %}

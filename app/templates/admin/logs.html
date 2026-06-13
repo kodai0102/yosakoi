@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block page_title %}操作ログ{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>操作ログ</h1>
+    <p class="page-description">ログイン、ユーザー登録、写真操作の履歴を確認します。</p>
+  </div>
+</div>
+
+<section class="panel">
+  <div class="panel-body">
+    <div class="toolbar">
+      <div class="nav-links">
+        <select aria-label="操作種別">
+          <option>すべての操作</option>
+          <option>ログイン</option>
+          <option>ユーザー管理</option>
+          <option>写真操作</option>
+        </select>
+        <input aria-label="ログ検索" placeholder="ユーザー名・操作で検索">
+      </div>
+      <span class="meta">{{ logs | length }}件</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>ユーザー</th>
+            <th>操作</th>
+            <th>結果</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td>{{ log.at }}</td>
+              <td>{{ log.user }}</td>
+              <td>{{ log.action }}</td>
+              <td><span class="badge badge-success">成功</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

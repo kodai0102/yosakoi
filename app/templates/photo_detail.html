@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block page_title %}写真詳細{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>写真詳細</h1>
+    <p class="page-description">12 / {{ album.count }} - {{ album.title }}</p>
+  </div>
+  <a class="button button-secondary" href="/albums/{{ album.id }}">写真一覧へ</a>
+</div>
+
+<div class="photo-detail-layout">
+  <section class="photo-hero"></section>
+  <aside class="panel">
+    <div class="panel-body">
+      <div class="toolbar">
+        <button class="button-secondary" type="button">♡ お気に入り</button>
+        <button type="button">⇩ ダウンロード</button>
+      </div>
+      <div class="detail-list">
+        <div class="detail-item">
+          <span class="detail-label">撮影日</span>
+          <span>2025/08/02 14:23</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">タグ</span>
+          <span>本祭, 名古屋, どまつり</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">サイズ</span>
+          <span>5472 x 3648</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block page_title %}検索{% endblock %}
+
+{% block content %}
+<div class="filter-bar">
+  <label>
+    年度
+    <select><option>2025</option><option>2024</option></select>
+  </label>
+  <label>
+    キーワード
+    <input type="search" placeholder="イベント名・アルバム名・タグで検索">
+  </label>
+  <button type="button">検索</button>
+</div>
+
+<div class="split-grid">
+  <section class="panel">
+    <div class="panel-body">
+      <div class="toolbar"><strong>アルバム</strong><span class="meta">{{ albums | length }}件</span></div>
+      {% for album in albums %}
+        <p><a href="/albums/{{ album.id }}">{{ album.title }}</a><br><span class="meta">{{ album.period }}</span></p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel">
+    <div class="panel-body">
+      <div class="toolbar"><strong>写真</strong><span class="meta">{{ photos | length }}件</span></div>
+      <div class="photo-grid">
+        {% for photo in photos %}
+          <a class="photo-tile" href="/photos/{{ photo.id }}"></a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
