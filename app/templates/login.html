@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="login-layout">
-  <section class="panel login-panel">
+{% block content_public %}
+<div class="login-page">
+  <section class="panel login-card">
     <div class="panel-body">
-      <div class="page-header">
-        <div>
-          <h1>ログイン</h1>
-          <p class="page-description">YOSAKOI PHOTO ARCHIVE</p>
-        </div>
+      <div class="login-brand">
+        <span class="brand-mark">Y</span>
+        <span class="brand-title">YOSAKOI</span>
+        <span class="brand-subtitle">チーム写真共有システム</span>
       </div>
+      <h1 style="font-size: 20px; text-align: center; margin-bottom: 22px;">ログイン</h1>
       {% if error %}
         <p class="error">{{ error }}</p>
       {% endif %}
@@ -23,7 +23,7 @@
           <input type="password" name="password" required autocomplete="current-password">
         </label>
         <div class="form-actions">
-          <button type="submit">ログイン</button>
+          <button type="submit" style="width: 100%;">ログイン</button>
         </div>
       </form>
     </div>

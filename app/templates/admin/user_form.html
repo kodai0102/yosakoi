@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block page_title %}{{ "ユーザー編集" if user else "ユーザー作成" }}{% endblock %}
+
 {% block content %}
 <div class="page-header">
   <div>
