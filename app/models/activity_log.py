@@ -13,6 +13,8 @@ class ActivityLog(Base):
     user_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id"), index=True)
     user_name: Mapped[str | None] = mapped_column(String(100))
     action_type: Mapped[str] = mapped_column(String(50), index=True)
+    login_time: Mapped[str | None] = mapped_column(String(12), index=True)
+    logout_time: Mapped[str | None] = mapped_column(String(12), index=True)
     target_type: Mapped[str | None] = mapped_column(String(50))
     target_id: Mapped[str | None] = mapped_column(String(100))
     ip_address: Mapped[str | None] = mapped_column(String(45))

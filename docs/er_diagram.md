@@ -173,6 +173,8 @@
 | user_id | BIGINT | YES | FK: users.id、ログイン失敗時はNULL可 |
 | user_name | VARCHAR(100) | YES | 操作時点の表示名を保存、推奨追加 |
 | action_type | VARCHAR(50) | NO | 操作種別 |
+| login_time | CHAR(12) | YES | ログイン成功時刻、YYYYMMDDHHMM形式 |
+| logout_time | CHAR(12) | YES | ログアウト時刻、YYYYMMDDHHMM形式 |
 | target_type | VARCHAR(50) | YES | `photo` / `user` / `album` 等、推奨追加 |
 | target_id | VARCHAR(100) | YES | 対象ID |
 | photo_id | UUID | YES | 写真関連ログ用、要件項目 |
@@ -288,6 +290,8 @@ erDiagram
         bigint user_id FK
         varchar user_name
         varchar action_type
+        char login_time
+        char logout_time
         varchar target_type
         varchar target_id
         uuid photo_id FK
@@ -313,6 +317,8 @@ erDiagram
 | photo_dancer_tags | dancer_tag_id |
 | activity_logs | user_id |
 | activity_logs | created_at |
+| activity_logs | login_time |
+| activity_logs | logout_time |
 | download_histories | user_id |
 | download_histories | photo_id |
 
@@ -332,6 +338,7 @@ erDiagram
 | favorites | user_id, created_at | お気に入り一覧 |
 | download_histories | user_id, photo_id | ダウンロード済み表示 |
 | activity_logs | action_type, created_at | ログ検索 |
+| activity_logs | login_time, logout_time | ログイン・ログアウト時刻検索 |
 
 ## 6. データ取得時の基本条件
 

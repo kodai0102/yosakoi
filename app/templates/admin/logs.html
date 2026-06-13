@@ -31,6 +31,8 @@
             <th>日時</th>
             <th>ユーザー</th>
             <th>操作</th>
+            <th>ログイン時刻</th>
+            <th>ログアウト時刻</th>
             <th>結果</th>
           </tr>
         </thead>
@@ -40,6 +42,8 @@
               <td>{{ log.at }}</td>
               <td>{{ log.user }}</td>
               <td>{{ log.action }}</td>
+              <td>{{ log.login_time or "-" }}</td>
+              <td>{{ log.logout_time or "-" }}</td>
               <td><span class="badge badge-success">成功</span></td>
             </tr>
           {% endfor %}

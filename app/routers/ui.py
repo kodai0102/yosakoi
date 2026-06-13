@@ -213,9 +213,27 @@ async def admin_logs_page(
     current_user: User = Depends(require_admin),
 ) -> HTMLResponse:
     logs = [
-        {"action": "login_success", "user": "管理者", "at": "2026/06/13 17:10"},
-        {"action": "user_create", "user": "管理者", "at": "2026/06/13 17:00"},
-        {"action": "photo_upload", "user": "管理者", "at": "2026/06/13 16:42"},
+        {
+            "action": "login_success",
+            "user": "管理者",
+            "login_time": "202606131710",
+            "logout_time": "",
+            "at": "2026/06/13 17:10",
+        },
+        {
+            "action": "logout",
+            "user": "管理者",
+            "login_time": "",
+            "logout_time": "202606131705",
+            "at": "2026/06/13 17:05",
+        },
+        {
+            "action": "user_create",
+            "user": "管理者",
+            "login_time": "",
+            "logout_time": "",
+            "at": "2026/06/13 17:00",
+        },
     ]
     return templates.TemplateResponse(
         "admin/logs.html",

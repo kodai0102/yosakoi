@@ -5,6 +5,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_env: str = "local"
+    postgres_host: str = "db"
+    postgres_port: int = 5432
+    postgres_db: str = "yosakoi"
+    postgres_user: str = "yosakoi"
+    postgres_password: str = "yosakoi"
     database_url: str
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
