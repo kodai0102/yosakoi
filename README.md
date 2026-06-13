@@ -1,6 +1,7 @@
 # YOSAKOI PHOTO ARCHIVE
 
-Phase1 では、FastAPI、PostgreSQL、Docker Compose、Alembic、Health Check API の最小構成を提供します。
+Phase0 では、FastAPI、PostgreSQL、Docker Compose、Alembic、Health Check API の最小構成を提供します。
+Phase1 では、JWT認証、ユーザー管理、CSV一括登録、操作ログの最小構成を提供します。
 
 ## 前提
 
@@ -65,7 +66,26 @@ docker compose exec app alembic current
 docker compose exec app alembic upgrade head
 ```
 
-Phase1 ではテーブル作成は対象外のため、初期マイグレーションファイルはまだ作成していません。
+## 初期管理者作成
+
+`.env` の `INITIAL_ADMIN_*` を確認してから実行します。
+
+```bash
+docker compose exec app python -m app.scripts.create_initial_admin
+```
+
+初期値:
+
+- ログインID: `admin`
+- パスワード: `admin-password`
+
+## ログイン
+
+ブラウザで以下を開きます。
+
+```text
+http://localhost:8000/login
+```
 
 ## 停止
 
