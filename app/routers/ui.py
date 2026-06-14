@@ -1,9 +1,17 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.session import get_db
 from app.dependencies.auth import get_current_user, require_admin
+from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
+from app.models.photo import Photo
+from app.services.photos import display_datetime, serialize_photo
 
 router = APIRouter(tags=["ui"])
 templates = Jinja2Templates(directory="app/templates")
@@ -51,6 +59,28 @@ def sample_photos() -> list[dict[str, object]]:
         {"id": i, "title": f"photo-{i:03}", "taken_at": "2025/08/02 14:23"}
         for i in range(1, 13)
     ]
+
+
+def parse_photo_ids(value: str | None) -> list[UUID]:
+    if not value:
+        return []
+    ids = []
+    for raw_id in value.split(","):
+        try:
+            ids.append(UUID(raw_id.strip()))
+        except ValueError:
+            continue
+    return ids
+
+
+async def photos_by_ids(db: AsyncSession, photo_ids: list[UUID]) -> list[Photo]:
+    if not photo_ids:
+        return []
+    result = await db.execute(
+        select(Photo).where(Photo.id.in_(photo_ids), Photo.is_deleted.is_(False))
+    )
+    photos = {photo.id: photo for photo in result.scalars().all()}
+    return [photos[photo_id] for photo_id in photo_ids if photo_id in photos]
 
 
 @router.get("/albums", response_class=HTMLResponse)
@@ -103,11 +133,25 @@ async def photo_detail_page(
 @router.get("/favorites", response_class=HTMLResponse)
 async def favorites_page(
     request: Request,
+    db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
+    result = await db.execute(
+        select(AccessLog)
+        .where(AccessLog.user_id == current_user.login_id, AccessLog.favorite.is_not(None))
+        .order_by(AccessLog.rireki_no.desc())
+    )
+    photo_ids = []
+    seen = set()
+    for log in result.scalars().all():
+        for photo_id in parse_photo_ids(log.favorite):
+            if photo_id not in seen:
+                seen.add(photo_id)
+                photo_ids.append(photo_id)
+    photos = [serialize_photo(photo) for photo in await photos_by_ids(db, photo_ids)]
     return templates.TemplateResponse(
         "favorites.html",
-        {"request": request, "current_user": current_user, "photos": sample_photos()[:6]},
+        {"request": request, "current_user": current_user, "photos": photos},
     )
 
 
@@ -146,11 +190,27 @@ async def search_page(
 @router.get("/downloads", response_class=HTMLResponse)
 async def downloads_page(
     request: Request,
+    db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
+    result = await db.execute(
+        select(AccessLog)
+        .where(
+            AccessLog.user_id == current_user.login_id,
+            AccessLog.pic_download_time.is_not(None),
+            AccessLog.pic_download_list.is_not(None),
+        )
+        .order_by(AccessLog.rireki_no.desc())
+    )
+    rows = []
+    for log in result.scalars().all():
+        for photo in await photos_by_ids(db, parse_photo_ids(log.pic_download_list)):
+            item = serialize_photo(photo)
+            item["downloaded_at_label"] = display_datetime(log.pic_download_time)
+            rows.append(item)
     return templates.TemplateResponse(
         "downloads.html",
-        {"request": request, "current_user": current_user, "photos": sample_photos()[:5]},
+        {"request": request, "current_user": current_user, "photos": rows},
     )
 
 

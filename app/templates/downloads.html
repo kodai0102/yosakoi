@@ -17,12 +17,15 @@
         <tbody>
           {% for photo in photos %}
             <tr>
-              <td>{{ photo.title }}</td>
-              <td>第25回 どまつり</td>
-              <td>2026/06/13 17:{{ "%02d"|format(photo.id) }}</td>
+              <td>{{ photo.file_name }}</td>
+              <td>ID: {{ photo.album_id }}</td>
+              <td>{{ photo.downloaded_at_label }}</td>
               <td><a class="button button-secondary" href="/photos/{{ photo.id }}">表示</a></td>
             </tr>
           {% endfor %}
+          {% if not photos %}
+            <tr><td colspan="4">ダウンロード履歴はまだありません。</td></tr>
+          {% endif %}
         </tbody>
       </table>
     </div>

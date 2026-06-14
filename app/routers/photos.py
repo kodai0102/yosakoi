@@ -162,6 +162,38 @@ async def delete_photo_form(
     )
 
 
+@router.post("/photos/{photo_id}/favorite", response_class=HTMLResponse)
+async def favorite_photo_form(
+    request: Request,
+    photo_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(get_current_user),
+) -> RedirectResponse:
+    await get_photo_or_404(db, photo_id)
+    await record_activity(db, request, "favorite", user=current_user, target_id=str(photo_id))
+    return RedirectResponse(url=f"/photos/{photo_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/photos/{photo_id}/download")
+async def download_photo_form(
+    request: Request,
+    photo_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(get_current_user),
+) -> FileResponse:
+    photo = await get_photo_or_404(db, photo_id)
+    album = await get_album_or_404(db, photo.album_id)
+    if not is_album_published(album) and not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="写真が存在しません")
+    await record_activity(db, request, "photo_download", user=current_user, target_id=str(photo_id))
+    path = ensure_media_path(photo.original_path)
+    return FileResponse(
+        path,
+        filename=photo.file_name,
+        media_type=photo.content_type,
+    )
+
+
 @router.get("/api/albums/{album_id}/photos")
 async def api_list_album_photos(
     album_id: int,

@@ -18,8 +18,12 @@
   <aside class="panel">
     <div class="panel-body">
       <div class="toolbar">
-        <button class="button-secondary" type="button">♡ お気に入り</button>
-        <button type="button">⇩ ダウンロード</button>
+        <form method="post" action="/photos/{{ photo.id }}/favorite">
+          <button class="button-secondary" type="submit">♡ お気に入り</button>
+        </form>
+        <form method="post" action="/photos/{{ photo.id }}/download">
+          <button type="submit">⇩ ダウンロード</button>
+        </form>
       </div>
       <div class="detail-list">
         <div class="detail-item">
