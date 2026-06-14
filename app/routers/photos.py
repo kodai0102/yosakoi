@@ -1,7 +1,7 @@
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -28,6 +28,7 @@ from app.services.photos import (
 
 router = APIRouter(tags=["photos"])
 templates = Jinja2Templates(directory="app/templates")
+UNFAVORITE_PREFIX = "unfavorite:"
 
 
 def serialize_photos(photos: list[object]) -> list[dict[str, object]]:
@@ -45,15 +46,17 @@ def ensure_media_path(object_path: str) -> Path:
 
 
 async def is_favorite_photo(db: AsyncSession, user: DeptUser, photo_id: UUID) -> bool:
+    favorite_id = str(photo_id)
     result = await db.execute(
-        select(AccessLog.rireki_no)
+        select(AccessLog.favorite)
         .where(
             AccessLog.user_id == user.login_id,
-            AccessLog.favorite == str(photo_id),
+            AccessLog.favorite.in_([favorite_id, f"{UNFAVORITE_PREFIX}{favorite_id}"]),
         )
+        .order_by(AccessLog.rireki_no.desc())
         .limit(1)
     )
-    return result.scalar_one_or_none() is not None
+    return result.scalar_one_or_none() == favorite_id
 
 
 @router.get("/media/{object_path:path}")
@@ -182,13 +185,19 @@ async def delete_photo_form(
 async def favorite_photo_form(
     request: Request,
     photo_id: UUID,
+    redirect_to: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> RedirectResponse:
     await get_photo_or_404(db, photo_id)
-    if not await is_favorite_photo(db, current_user, photo_id):
+    if await is_favorite_photo(db, current_user, photo_id):
+        await record_activity(db, request, "favorite_remove", user=current_user, target_id=str(photo_id))
+    else:
         await record_activity(db, request, "favorite", user=current_user, target_id=str(photo_id))
-    return RedirectResponse(url=f"/photos/{photo_id}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        url=redirect_to or f"/photos/{photo_id}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.post("/photos/{photo_id}/download")

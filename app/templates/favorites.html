@@ -12,10 +12,15 @@
 
 <div class="photo-grid">
   {% for photo in photos %}
-    <a class="photo-tile" href="/photos/{{ photo.id }}">
-      <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
-      <span class="photo-favorite">♥</span>
-    </a>
+    <div class="favorite-card">
+      <a class="photo-tile" href="/photos/{{ photo.id }}">
+        <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
+      </a>
+      <form method="post" action="/photos/{{ photo.id }}/favorite">
+        <input type="hidden" name="redirect_to" value="/favorites">
+        <button class="favorite-remove" type="submit" aria-label="お気に入り解除">♥</button>
+      </form>
+    </div>
   {% endfor %}
 </div>
 {% if not photos %}

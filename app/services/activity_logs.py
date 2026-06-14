@@ -83,3 +83,14 @@ async def record_activity(
         )
         await db.commit()
         return
+
+    if action_type == "favorite_remove":
+        db.add(
+            AccessLog(
+                user_name=user.display_name if user else user_name,
+                user_id=user.login_id if user else None,
+                favorite=f"unfavorite:{target_id}",
+            )
+        )
+        await db.commit()
+        return

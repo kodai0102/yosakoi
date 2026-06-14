@@ -15,6 +15,7 @@ from app.services.photos import display_datetime, serialize_photo
 
 router = APIRouter(tags=["ui"])
 templates = Jinja2Templates(directory="app/templates")
+UNFAVORITE_PREFIX = "unfavorite:"
 
 
 def sample_albums() -> list[dict[str, object]]:
@@ -71,6 +72,17 @@ def parse_photo_ids(value: str | None) -> list[UUID]:
         except ValueError:
             continue
     return ids
+
+
+def favorite_value_photo_id(value: str | None) -> tuple[UUID | None, bool]:
+    if not value:
+        return None, False
+    is_removed = value.startswith(UNFAVORITE_PREFIX)
+    raw_id = value.removeprefix(UNFAVORITE_PREFIX)
+    try:
+        return UUID(raw_id), is_removed
+    except ValueError:
+        return None, False
 
 
 async def photos_by_ids(db: AsyncSession, photo_ids: list[UUID]) -> list[Photo]:
@@ -144,10 +156,12 @@ async def favorites_page(
     photo_ids = []
     seen = set()
     for log in result.scalars().all():
-        for photo_id in parse_photo_ids(log.favorite):
-            if photo_id not in seen:
-                seen.add(photo_id)
-                photo_ids.append(photo_id)
+        photo_id, is_removed = favorite_value_photo_id(log.favorite)
+        if photo_id is None or photo_id in seen:
+            continue
+        seen.add(photo_id)
+        if not is_removed:
+            photo_ids.append(photo_id)
     photos = [serialize_photo(photo) for photo in await photos_by_ids(db, photo_ids)]
     return templates.TemplateResponse(
         "favorites.html",
