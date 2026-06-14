@@ -8,30 +8,27 @@
     <h1>アルバム管理</h1>
     <p class="page-description">アルバムの公開状態、公開期間、写真枚数を確認します。</p>
   </div>
-  <button type="button">アルバム作成</button>
+  <a class="button" href="/admin/albums/new">アルバム作成</a>
 </div>
 
 <section class="panel">
   <div class="panel-body">
-    <div class="toolbar">
+    <form class="toolbar" method="get" action="/admin/albums">
       <div class="nav-links">
-        <select aria-label="公開状態">
-          <option>すべての状態</option>
-          <option>公開中</option>
-          <option>終了</option>
-        </select>
-        <input aria-label="アルバム検索" placeholder="アルバム名で検索">
+        <input type="number" name="year" value="{{ year }}" aria-label="年度" placeholder="年度">
+        <input name="q" value="{{ query }}" aria-label="アルバム検索" placeholder="アルバム名・イベント名で検索">
+        <button type="submit">検索</button>
       </div>
       <span class="meta">{{ albums | length }}件</span>
-    </div>
+    </form>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
             <th>アルバム</th>
+            <th>イベント</th>
             <th>公開期間</th>
             <th>写真枚数</th>
-            <th>タグ</th>
             <th>状態</th>
             <th>操作</th>
           </tr>
@@ -41,30 +38,31 @@
             <tr>
               <td>
                 <strong>{{ album.title }}</strong><br>
-                <span class="meta">ID: {{ album.id }}</span>
+                <span class="meta">ID: {{ album.id }} / {{ album.year }}</span>
               </td>
+              <td>{{ album.event_name }}</td>
               <td>{{ album.period }}</td>
               <td>{{ album.count }}枚</td>
-              <td>
-                <div class="tag-list">
-                  {% for tag in album.tags[:3] %}
-                    <span class="tag-pill">{{ tag }}</span>
-                  {% endfor %}
-                </div>
-              </td>
               <td>
                 {% if album.status == "公開中" %}
                   <span class="badge badge-success">公開中</span>
                 {% else %}
-                  <span class="badge badge-muted">終了</span>
+                  <span class="badge badge-muted">非公開</span>
                 {% endif %}
               </td>
               <td>
                 <div class="nav-links">
                   <a class="button button-secondary" href="/admin/albums/{{ album.id }}/photos">写真</a>
-                  <button class="button-secondary" type="button">編集</button>
+                  <a class="button button-secondary" href="/admin/albums/{{ album.id }}/edit">編集</a>
+                  <form method="post" action="/admin/albums/{{ album.id }}/delete">
+                    <button class="button-secondary" type="submit">削除</button>
+                  </form>
                 </div>
               </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6">アルバムが登録されていません。</td>
             </tr>
           {% endfor %}
         </tbody>

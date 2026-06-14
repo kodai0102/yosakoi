@@ -34,10 +34,8 @@ def clear_auth_cookie(response: Response) -> None:
 async def index(
     request: Request,
     current_user: DeptUser = Depends(get_current_user),
-) -> HTMLResponse:
-    return templates.TemplateResponse(
-        "home.html", {"request": request, "current_user": current_user}
-    )
+):
+    return RedirectResponse(url="/albums", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/login", response_class=HTMLResponse)

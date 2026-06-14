@@ -5,77 +5,76 @@
 {% block content %}
 <div class="album-page">
   <section>
-    <div class="filter-bar">
+    <form class="filter-bar" method="get" action="/albums">
       <label>
-        公開状態
-        <select>
-          <option>公開中のアルバム</option>
-        </select>
+        年度
+        <input type="number" name="year" value="{{ year }}" placeholder="2026">
       </label>
       <label>
         キーワード
-        <input type="search" placeholder="アルバム名で検索">
+        <input type="search" name="q" value="{{ query }}" placeholder="アルバム名・イベント名で検索">
       </label>
-      <button type="button">検索</button>
-    </div>
+      <button type="submit">検索</button>
+    </form>
 
-    <div class="album-grid">
-      <a class="album-card" href="/albums/1">
-        <div class="album-thumb"><span class="album-status">公開中</span></div>
-        <div class="album-body">
-          <h2 class="album-title">第25回 どまつり</h2>
-          <p class="album-detail">2025/08/01 - 2025/08/10</p>
-          <p class="album-detail">写真枚数: 245枚</p>
+    {% if albums %}
+      <div class="album-grid">
+        {% for album in albums %}
+          <a class="album-card" href="/albums/{{ album.id }}">
+            <div class="album-thumb"><span class="album-status">{{ album.status }}</span></div>
+            <div class="album-body">
+              <h2 class="album-title">{{ album.title }}</h2>
+              <p class="album-detail">{{ album.period }}</p>
+              <p class="album-detail">写真枚数: {{ album.count }}枚</p>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <section class="panel">
+        <div class="panel-body">
+          <strong>公開中のアルバムはありません</strong>
+          <p class="page-description">公開期間内のアルバムが登録されると、ここに表示されます。</p>
         </div>
-      </a>
-      <a class="album-card" href="/albums/2">
-        <div class="album-thumb"><span class="album-status">公開中</span></div>
-        <div class="album-body">
-          <h2 class="album-title">よさこい祭り 2025</h2>
-          <p class="album-detail">2025/07/10 - 2025/07/15</p>
-          <p class="album-detail">写真枚数: 312枚</p>
-        </div>
-      </a>
-      <a class="album-card" href="/albums/3">
-        <div class="album-thumb"><span class="album-status">公開中</span></div>
-        <div class="album-body">
-          <h2 class="album-title">スーパーよさこい 2025</h2>
-          <p class="album-detail">2025/06/07 - 2025/06/08</p>
-          <p class="album-detail">写真枚数: 189枚</p>
-        </div>
-      </a>
-    </div>
+      </section>
+    {% endif %}
   </section>
 
-  <aside class="detail-panel">
-    <div class="detail-header">
-      <h2 class="detail-title">アルバム詳細</h2>
-      <span>×</span>
-    </div>
-    <div class="detail-image"></div>
-    <span class="badge" style="background: var(--brand); color: #fff;">公開中</span>
-    <h2 style="margin: 16px 0 0;">第25回 どまつり</h2>
-    <div class="detail-list">
-      <div class="detail-item">
-        <span class="detail-label">公開期間</span>
-        <span>2025/08/01 - 2025/08/10</span>
+  {% if albums %}
+    {% set first_album = albums[0] %}
+    <aside class="detail-panel">
+      <div class="detail-header">
+        <h2 class="detail-title">アルバム詳細</h2>
+        <span>×</span>
       </div>
-      <div class="detail-item">
-        <span class="detail-label">写真枚数</span>
-        <span>245枚</span>
+      <div class="detail-image"></div>
+      <span class="badge" style="background: var(--brand); color: #fff;">{{ first_album.status }}</span>
+      <h2 style="margin: 16px 0 0;">{{ first_album.title }}</h2>
+      <div class="detail-list">
+        <div class="detail-item">
+          <span class="detail-label">イベント</span>
+          <span>{{ first_album.event_name }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">公開期間</span>
+          <span>{{ first_album.period }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">写真枚数</span>
+          <span>{{ first_album.count }}枚</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">タグ</span>
+          <span class="tag-list">
+            {% for tag in first_album.tags %}
+              <span class="tag-pill">{{ tag }}</span>
+            {% endfor %}
+          </span>
+        </div>
       </div>
-      <div class="detail-item">
-        <span class="detail-label">タグ</span>
-        <span class="tag-list">
-          <span class="tag-pill">本祭</span>
-          <span class="tag-pill">名古屋</span>
-          <span class="tag-pill">どまつり</span>
-          <span class="tag-pill">2025</span>
-        </span>
-      </div>
-    </div>
-    <a class="button" style="width: 100%;" href="/albums/1">このアルバムを見る</a>
-    <a class="button button-secondary" style="width: 100%; margin-top: 12px;" href="#">お気に入りに追加</a>
-  </aside>
+      <a class="button" style="width: 100%;" href="/albums/{{ first_album.id }}">このアルバムを見る</a>
+      <a class="button button-secondary" style="width: 100%; margin-top: 12px;" href="#">お気に入りに追加</a>
+    </aside>
+  {% endif %}
 </div>
 {% endblock %}
