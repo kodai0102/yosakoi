@@ -1,8 +1,10 @@
 from datetime import date, datetime
+from types import SimpleNamespace
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import ValidationError
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -62,6 +64,37 @@ def album_form_context(
         "album": album,
         "error": error,
     }
+
+
+def album_form_values(
+    year: int,
+    event_name: str,
+    event_date: date,
+    title: str,
+    description: str,
+    thumbnail_path: str,
+    publish_from: datetime,
+    publish_to: datetime,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        id=None,
+        year=year,
+        event_name=event_name,
+        event_date=event_date,
+        title=title,
+        description=description,
+        thumbnail_path=thumbnail_path,
+        publish_from=publish_from,
+        publish_to=publish_to,
+    )
+
+
+def validation_message(exc: ValidationError) -> str:
+    first_error = exc.errors()[0] if exc.errors() else {}
+    field = first_error.get("loc", ["入力"])[0]
+    if field == "year":
+        return "年度は1900以上9999以下で入力してください"
+    return "入力内容を確認してください"
 
 
 async def get_album_or_404(db: AsyncSession, album_id: int) -> Album:
@@ -182,17 +215,40 @@ async def create_album_form(
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ):
-    payload = AlbumCreate(
-        year=year,
-        event_name=event_name,
-        event_date=event_date,
-        title=title,
-        description=description,
-        thumbnail_path=thumbnail_path,
-        publish_from=publish_from,
-        publish_to=publish_to,
+    form_album = album_form_values(
+        year,
+        event_name,
+        event_date,
+        title,
+        description,
+        thumbnail_path,
+        publish_from,
+        publish_to,
     )
-    await create_album(db, payload)
+    try:
+        payload = AlbumCreate(
+            year=year,
+            event_name=event_name,
+            event_date=event_date,
+            title=title,
+            description=description,
+            thumbnail_path=thumbnail_path,
+            publish_from=publish_from,
+            publish_to=publish_to,
+        )
+        await create_album(db, payload)
+    except ValidationError as exc:
+        return templates.TemplateResponse(
+            "admin/album_form.html",
+            album_form_context(request, current_user, form_album, validation_message(exc)),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    except HTTPException as exc:
+        return templates.TemplateResponse(
+            "admin/album_form.html",
+            album_form_context(request, current_user, form_album, str(exc.detail)),
+            status_code=exc.status_code,
+        )
     return RedirectResponse(url="/admin/albums", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -225,17 +281,41 @@ async def update_album_form(
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ):
-    payload = AlbumUpdate(
-        year=year,
-        event_name=event_name,
-        event_date=event_date,
-        title=title,
-        description=description,
-        thumbnail_path=thumbnail_path,
-        publish_from=publish_from,
-        publish_to=publish_to,
+    form_album = album_form_values(
+        year,
+        event_name,
+        event_date,
+        title,
+        description,
+        thumbnail_path,
+        publish_from,
+        publish_to,
     )
-    await update_album(db, album_id, payload)
+    form_album.id = album_id
+    try:
+        payload = AlbumUpdate(
+            year=year,
+            event_name=event_name,
+            event_date=event_date,
+            title=title,
+            description=description,
+            thumbnail_path=thumbnail_path,
+            publish_from=publish_from,
+            publish_to=publish_to,
+        )
+        await update_album(db, album_id, payload)
+    except ValidationError as exc:
+        return templates.TemplateResponse(
+            "admin/album_form.html",
+            album_form_context(request, current_user, form_album, validation_message(exc)),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    except HTTPException as exc:
+        return templates.TemplateResponse(
+            "admin/album_form.html",
+            album_form_context(request, current_user, form_album, str(exc.detail)),
+            status_code=exc.status_code,
+        )
     return RedirectResponse(url="/admin/albums", status_code=status.HTTP_303_SEE_OTHER)
 
 

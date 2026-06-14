@@ -19,7 +19,11 @@
     <div class="panel-body">
       <div class="toolbar">
         <form method="post" action="/photos/{{ photo.id }}/favorite">
-          <button class="button-secondary" type="submit">♡ お気に入り</button>
+          {% if photo.is_favorite %}
+            <button class="button-secondary favorite-active" type="submit" disabled>♥ お気に入り済み</button>
+          {% else %}
+            <button class="button-secondary" type="submit">♡ お気に入り</button>
+          {% endif %}
         </form>
         <form method="post" action="/photos/{{ photo.id }}/download">
           <button type="submit">⇩ ダウンロード</button>

@@ -4,10 +4,12 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user, require_admin
+from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
 from app.routers.albums import get_album_or_404
 from app.schemas.album import AlbumRead
@@ -40,6 +42,18 @@ def ensure_media_path(object_path: str) -> Path:
     if not path.exists() or not path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="画像が存在しません")
     return path
+
+
+async def is_favorite_photo(db: AsyncSession, user: DeptUser, photo_id: UUID) -> bool:
+    result = await db.execute(
+        select(AccessLog.rireki_no)
+        .where(
+            AccessLog.user_id == user.login_id,
+            AccessLog.favorite == str(photo_id),
+        )
+        .limit(1)
+    )
+    return result.scalar_one_or_none() is not None
 
 
 @router.get("/media/{object_path:path}")
@@ -88,13 +102,15 @@ async def photo_detail_page(
     if not is_album_published(album) and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="写真が存在しません")
     album_data = serialize_album(album)
+    photo_data = serialize_photo(photo)
+    photo_data["is_favorite"] = await is_favorite_photo(db, current_user, photo.id)
     return templates.TemplateResponse(
         "photo_detail.html",
         {
             "request": request,
             "current_user": current_user,
             "album": album_data,
-            "photo": serialize_photo(photo),
+            "photo": photo_data,
         },
     )
 
@@ -170,7 +186,8 @@ async def favorite_photo_form(
     current_user: DeptUser = Depends(get_current_user),
 ) -> RedirectResponse:
     await get_photo_or_404(db, photo_id)
-    await record_activity(db, request, "favorite", user=current_user, target_id=str(photo_id))
+    if not await is_favorite_photo(db, current_user, photo_id):
+        await record_activity(db, request, "favorite", user=current_user, target_id=str(photo_id))
     return RedirectResponse(url=f"/photos/{photo_id}", status_code=status.HTTP_303_SEE_OTHER)
 
 
