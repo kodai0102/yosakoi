@@ -53,7 +53,7 @@
 
 ### 3.2 access_log
 
-ログイン、ログアウト、写真ダウンロード、お気に入り情報を管理します。
+ログイン、ログアウト、写真アップロード、写真ダウンロード、お気に入り情報を管理します。
 
 | カラム | 型 | NULL | 制約/補足 |
 | --- | --- | --- | --- |
@@ -64,11 +64,14 @@
 | logoff_time | TIMESTAMPTZ | YES | ログアウト日時。dept_user.create_date と同じ日時型 |
 | pic_download_time | TIMESTAMPTZ | YES | 写真ダウンロード日時。dept_user.create_date と同じ日時型 |
 | pic_download_list | TEXT | YES | ダウンロードした写真IDまたは一覧 |
+| pic_upload_time | TIMESTAMPTZ | YES | 写真アップロード日時。dept_user.create_date と同じ日時型 |
+| pic_upload_list | TEXT | YES | アップロードした写真IDまたは一覧 |
 | favorite | TEXT | YES | お気に入り対象の写真IDまたは一覧 |
 
 補足:
 
 - 現行実装ではログイン成功時に `logon_time` を登録し、ログアウト時に未ログアウトの最新行へ `logoff_time` を更新する。
+- 写真アップロード時は `pic_upload_time` と `pic_upload_list` を登録する。
 - 写真ダウンロード時は `pic_download_time` と `pic_download_list` を登録する。
 
 ### 3.3 albums
@@ -102,8 +105,8 @@
 | --- | --- | --- | --- |
 | id | UUID | NO | PK、写真IDとして外部公開しやすい |
 | album_id | BIGINT | NO | FK: albums.id |
-| original_path | TEXT | NO | R2原本画像パス |
-| thumbnail_path | TEXT | NO | R2サムネイル画像パス |
+| original_path | TEXT | NO | R2原本画像パス。ローカル開発では同じオブジェクトキーを `LOCAL_STORAGE_ROOT` 配下に保存 |
+| thumbnail_path | TEXT | NO | R2サムネイル画像パス。ローカル開発では同じオブジェクトキーを `LOCAL_STORAGE_ROOT` 配下に保存 |
 | file_name | VARCHAR(255) | NO | 元ファイル名 |
 | content_type | VARCHAR(100) | NO | `image/jpeg` 等 |
 | file_size | BIGINT | YES | 運用・監査用 |
@@ -206,6 +209,8 @@ erDiagram
         timestamptz logoff_time
         timestamptz pic_download_time
         text pic_download_list
+        timestamptz pic_upload_time
+        text pic_upload_list
         text favorite
     }
 
@@ -280,6 +285,7 @@ erDiagram
 | access_log | logon_time |
 | access_log | logoff_time |
 | access_log | pic_download_time |
+| access_log | pic_upload_time |
 | photos | album_id |
 | photos | taken_at |
 | photos | is_deleted |

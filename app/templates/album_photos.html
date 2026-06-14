@@ -24,9 +24,13 @@
 
 <div class="photo-grid">
   {% for photo in photos %}
-    <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.title }}">
+    <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.file_name }}">
+      <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
       <span class="photo-favorite">♡</span>
     </a>
   {% endfor %}
 </div>
+{% if not photos %}
+  <p class="empty-state">このアルバムにはまだ写真がありません。</p>
+{% endif %}
 {% endblock %}

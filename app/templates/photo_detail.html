@@ -6,13 +6,15 @@
 <div class="page-header">
   <div>
     <h1>写真詳細</h1>
-    <p class="page-description">12 / {{ album.count }} - {{ album.title }}</p>
+    <p class="page-description">{{ album.title }} - {{ photo.file_name }}</p>
   </div>
   <a class="button button-secondary" href="/albums/{{ album.id }}">写真一覧へ</a>
 </div>
 
 <div class="photo-detail-layout">
-  <section class="photo-hero"></section>
+  <section class="photo-hero">
+    <img src="{{ photo.media_url }}" alt="{{ photo.file_name }}">
+  </section>
   <aside class="panel">
     <div class="panel-body">
       <div class="toolbar">
@@ -22,15 +24,19 @@
       <div class="detail-list">
         <div class="detail-item">
           <span class="detail-label">撮影日</span>
-          <span>2025/08/02 14:23</span>
+          <span>{{ photo.taken_at_label }}</span>
         </div>
         <div class="detail-item">
-          <span class="detail-label">タグ</span>
-          <span>本祭, 名古屋, どまつり</span>
+          <span class="detail-label">ファイル名</span>
+          <span>{{ photo.file_name }}</span>
         </div>
         <div class="detail-item">
           <span class="detail-label">サイズ</span>
-          <span>5472 x 3648</span>
+          <span>{{ photo.file_size }} bytes</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Content-Type</span>
+          <span>{{ photo.content_type }}</span>
         </div>
       </div>
     </div>

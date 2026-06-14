@@ -16,6 +16,8 @@ class AccessLog(Base):
     logoff_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     pic_download_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     pic_download_list: Mapped[str | None] = mapped_column(Text)
+    pic_upload_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    pic_upload_list: Mapped[str | None] = mapped_column(Text)
     favorite: Mapped[str | None] = mapped_column(Text)
 
     __table_args__ = (ForeignKeyConstraint(["user_id"], ["dept_user.user_id"]),)

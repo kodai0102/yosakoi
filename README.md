@@ -136,8 +136,8 @@ docker compose down -v
 
 ### アクセスログテーブル
 名称：access_log
-概要：ユーザーのログオン時間、ログオフ時間、写真ダウンロード時間、ダウンロードした写真、お気に入りの情報を管理
-カラム案：rireki_no, user_name, user_id, logon_time, logoff_time, pic_download_time, pic_download_list, favorite
-補足：logon_time, logoff_time, pic_download_time は dept_user.create_date と同じ日時型
+概要：ユーザーのログオン時間、ログオフ時間、写真アップロード時間、写真ダウンロード時間、アップロード/ダウンロードした写真、お気に入りの情報を管理
+カラム案：rireki_no, user_name, user_id, logon_time, logoff_time, pic_upload_time, pic_upload_list, pic_download_time, pic_download_list, favorite
+補足：logon_time, logoff_time, pic_upload_time, pic_download_time は dept_user.create_date と同じ日時型
 主キー：rireki_no
 外部キー：user_id

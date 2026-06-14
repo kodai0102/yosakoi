@@ -111,27 +111,6 @@ async def albums_page(
     )
 
 
-@router.get("/albums/{album_id}", response_class=HTMLResponse)
-async def album_photos_page(
-    request: Request,
-    album_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: DeptUser = Depends(get_current_user),
-) -> HTMLResponse:
-    album = await get_album_or_404(db, album_id)
-    if not is_album_published(album):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="アルバムが存在しません")
-    return templates.TemplateResponse(
-        "album_photos.html",
-        {
-            "request": request,
-            "current_user": current_user,
-            "album": serialize_album(album),
-            "photos": [],
-        },
-    )
-
-
 @router.get("/api/albums")
 async def api_list_albums(
     q: str | None = None,
@@ -154,18 +133,6 @@ async def api_get_album(
     if not is_album_published(album):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="アルバムが存在しません")
     return {"success": True, "data": {"album": AlbumRead.model_validate(album)}}
-
-
-@router.get("/api/albums/{album_id}/photos")
-async def api_list_album_photos(
-    album_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: DeptUser = Depends(get_current_user),
-) -> dict[str, object]:
-    album = await get_album_or_404(db, album_id)
-    if not is_album_published(album):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="アルバムが存在しません")
-    return {"success": True, "data": {"album": AlbumRead.model_validate(album), "photos": []}}
 
 
 @router.get("/admin/albums", response_class=HTMLResponse)
@@ -280,25 +247,6 @@ async def delete_album_form(
 ):
     await delete_album(db, album_id)
     return RedirectResponse(url="/admin/albums", status_code=status.HTTP_303_SEE_OTHER)
-
-
-@router.get("/admin/albums/{album_id}/photos", response_class=HTMLResponse)
-async def admin_photos_page(
-    request: Request,
-    album_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: DeptUser = Depends(require_admin),
-) -> HTMLResponse:
-    album = await get_album_or_404(db, album_id)
-    return templates.TemplateResponse(
-        "admin/photos.html",
-        {
-            "request": request,
-            "current_user": current_user,
-            "album": serialize_album(album),
-            "photos": [],
-        },
-    )
 
 
 @router.get("/api/admin/albums")

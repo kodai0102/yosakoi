@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     auth_cookie_name: str = "access_token"
+    local_storage_root: str = "storage"
     initial_admin_login_id: str = "admin"
     initial_admin_display_name: str = "管理者"
     initial_admin_password: str

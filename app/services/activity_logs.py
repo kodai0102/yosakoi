@@ -61,6 +61,18 @@ async def record_activity(
         await db.commit()
         return
 
+    if action_type == "photo_upload":
+        db.add(
+            AccessLog(
+                user_name=user.display_name if user else user_name,
+                user_id=user.login_id if user else None,
+                pic_upload_time=activity_time,
+                pic_upload_list=target_id,
+            )
+        )
+        await db.commit()
+        return
+
     if action_type == "favorite":
         db.add(
             AccessLog(
