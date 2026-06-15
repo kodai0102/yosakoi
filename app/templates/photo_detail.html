@@ -35,6 +35,10 @@
           <span>{{ photo.taken_at_label }}</span>
         </div>
         <div class="detail-item">
+          <span class="detail-label">タグ</span>
+          <span>{{ photo.tags | join(", ") if photo.tags else "タグなし" }}</span>
+        </div>
+        <div class="detail-item">
           <span class="detail-label">ファイル名</span>
           <span>{{ photo.file_name }}</span>
         </div>

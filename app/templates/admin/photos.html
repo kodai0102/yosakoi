@@ -48,7 +48,16 @@
           <div class="photo-admin-meta">
             <strong>{{ photo.file_name }}</strong>
             <span>{{ photo.taken_at_label }}</span>
+            {% if photo.tags %}
+              <span>{{ photo.tags | join(", ") }}</span>
+            {% else %}
+              <span>タグなし</span>
+            {% endif %}
           </div>
+          <form method="post" action="/admin/photos/{{ photo.id }}/tags">
+            <input name="tags" value="{{ photo.tags_text }}" aria-label="タグ" placeholder="タグをカンマ区切りで入力">
+            <button class="button-secondary" type="submit">タグ保存</button>
+          </form>
           <form method="post" action="/admin/photos/{{ photo.id }}/delete" data-confirm-delete data-confirm-message="本当に削除しますか？">
             <button class="button-secondary" type="submit">削除</button>
           </form>

@@ -12,17 +12,37 @@
 
 <section class="panel" style="margin-bottom: 22px;">
   <div class="panel-body">
+    <form class="toolbar" method="get" action="/tags">
+      <input name="q" value="{{ query }}" aria-label="タグ検索" placeholder="タグ名で検索">
+      <button type="submit">検索</button>
+    </form>
     <div class="tag-list">
       {% for tag in tags %}
-        <a class="tag-pill" href="/tags">{{ tag }}</a>
+        <a class="tag-pill" href="/tags?tag_id={{ tag.id }}">
+          {{ tag.name }} {{ tag.photo_count }}枚
+        </a>
       {% endfor %}
     </div>
+    {% if not tags %}
+      <p class="empty-state">タグが登録されていません。管理画面の写真管理からタグを保存してください。</p>
+    {% endif %}
   </div>
 </section>
 
+{% if selected_tag %}
+  <p class="page-description">「{{ selected_tag.name }}」の写真 {{ photos | length }}枚</p>
+{% else %}
+  <p class="page-description">タグを選択すると写真が表示されます。</p>
+{% endif %}
+
 <div class="photo-grid">
   {% for photo in photos %}
-    <a class="photo-tile" href="/photos/{{ photo.id }}"></a>
+    <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.file_name }}">
+      <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
+    </a>
   {% endfor %}
 </div>
+{% if selected_tag and not photos %}
+  <p class="empty-state">このタグに紐づく写真はありません。</p>
+{% endif %}
 {% endblock %}

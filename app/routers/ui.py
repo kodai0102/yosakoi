@@ -12,6 +12,7 @@ from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
 from app.models.photo import Photo
 from app.services.photos import display_datetime, serialize_photo
+from app.services.tags import list_photos_by_tag, list_tags_with_counts
 
 router = APIRouter(tags=["ui"])
 templates = Jinja2Templates(directory="app/templates")
@@ -172,15 +173,23 @@ async def favorites_page(
 @router.get("/tags", response_class=HTMLResponse)
 async def tag_search_page(
     request: Request,
+    tag_id: int | None = None,
+    q: str | None = None,
+    db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
+    tags = await list_tags_with_counts(db, q)
+    selected_tag = next((tag for tag in tags if tag["id"] == tag_id), None)
+    photos = await list_photos_by_tag(db, tag_id) if tag_id is not None else []
     return templates.TemplateResponse(
         "tag_search.html",
         {
             "request": request,
             "current_user": current_user,
-            "tags": ["山田太郎", "佐藤花子", "旗士", "煽り", "地方車", "本祭"],
-            "photos": sample_photos()[:8],
+            "tags": tags,
+            "photos": photos,
+            "query": q or "",
+            "selected_tag": selected_tag,
         },
     )
 
@@ -269,14 +278,18 @@ async def admin_photos_page(
 @router.get("/admin/tags", response_class=HTMLResponse)
 async def admin_tags_page(
     request: Request,
+    q: str | None = None,
+    db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
+    tags = await list_tags_with_counts(db, q)
     return templates.TemplateResponse(
         "admin/tags.html",
         {
             "request": request,
             "current_user": current_user,
-            "tags": ["山田太郎", "佐藤花子", "旗士", "煽り", "地方車", "本祭"],
+            "tags": tags,
+            "query": q or "",
         },
     )
 

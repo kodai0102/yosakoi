@@ -25,6 +25,7 @@ from app.services.photos import (
     serialize_photo,
     storage_root,
 )
+from app.services.tags import get_photo_tag_names, get_photo_tags_map, parse_tag_names, set_photo_tags
 
 router = APIRouter(tags=["photos"])
 templates = Jinja2Templates(directory="app/templates")
@@ -33,6 +34,17 @@ UNFAVORITE_PREFIX = "unfavorite:"
 
 def serialize_photos(photos: list[object]) -> list[dict[str, object]]:
     return [serialize_photo(photo) for photo in photos]
+
+
+async def serialize_photos_with_tags(db: AsyncSession, photos: list[object]) -> list[dict[str, object]]:
+    tag_map = await get_photo_tags_map(db, [photo.id for photo in photos])
+    rows = []
+    for photo in photos:
+        item = serialize_photo(photo)
+        item["tags"] = tag_map.get(photo.id, [])
+        item["tags_text"] = ", ".join(item["tags"])
+        rows.append(item)
+    return rows
 
 
 def ensure_media_path(object_path: str) -> Path:
@@ -107,6 +119,7 @@ async def photo_detail_page(
     album_data = serialize_album(album)
     photo_data = serialize_photo(photo)
     photo_data["is_favorite"] = await is_favorite_photo(db, current_user, photo.id)
+    photo_data["tags"] = await get_photo_tag_names(db, photo.id)
     return templates.TemplateResponse(
         "photo_detail.html",
         {
@@ -135,7 +148,7 @@ async def admin_photos_page(
             "request": request,
             "current_user": current_user,
             "album": album_data,
-            "photos": serialize_photos(photos),
+            "photos": await serialize_photos_with_tags(db, photos),
             "error": None,
         },
     )
@@ -177,6 +190,21 @@ async def delete_photo_form(
     await delete_photo(db, photo_id)
     return RedirectResponse(
         url=f"/admin/albums/{album_id}/photos",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/photos/{photo_id}/tags", response_class=HTMLResponse)
+async def update_photo_tags_form(
+    photo_id: UUID,
+    tags: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(require_admin),
+) -> RedirectResponse:
+    photo = await get_photo_or_404(db, photo_id)
+    await set_photo_tags(db, photo_id, parse_tag_names(tags))
+    return RedirectResponse(
+        url=f"/admin/albums/{photo.album_id}/photos",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 

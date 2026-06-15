@@ -8,15 +8,15 @@
     <h1>タグ管理</h1>
     <p class="page-description">検索や写真整理に使うタグを確認します。</p>
   </div>
-  <button type="button">タグ作成</button>
 </div>
 
 <section class="panel">
   <div class="panel-body">
-    <div class="toolbar">
-      <input aria-label="タグ検索" placeholder="タグ名で検索">
+    <form class="toolbar" method="get" action="/admin/tags">
+      <input name="q" value="{{ query }}" aria-label="タグ検索" placeholder="タグ名で検索">
+      <button type="submit">検索</button>
       <span class="meta">{{ tags | length }}件</span>
-    </div>
+    </form>
     <div class="table-wrap">
       <table>
         <thead>
@@ -30,16 +30,15 @@
         <tbody>
           {% for tag in tags %}
             <tr>
-              <td><span class="tag-pill">{{ tag }}</span></td>
-              <td>{{ loop.index * 12 }}枚</td>
-              <td>2026-06-13</td>
+              <td><a class="tag-pill" href="/tags?tag_id={{ tag.id }}">{{ tag.name }}</a></td>
+              <td>{{ tag.photo_count }}枚</td>
+              <td>{{ tag.created_at.strftime("%Y-%m-%d") }}</td>
               <td>
-                <div class="nav-links">
-                  <button class="button-secondary" type="button">編集</button>
-                  <button class="button-secondary" type="button">統合</button>
-                </div>
+                <a class="button button-secondary" href="/tags?tag_id={{ tag.id }}">写真を見る</a>
               </td>
             </tr>
+          {% else %}
+            <tr><td colspan="4">タグが登録されていません。</td></tr>
           {% endfor %}
         </tbody>
       </table>
