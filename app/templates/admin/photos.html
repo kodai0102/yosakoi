@@ -49,7 +49,7 @@
             <strong>{{ photo.file_name }}</strong>
             <span>{{ photo.taken_at_label }}</span>
           </div>
-          <form method="post" action="/admin/photos/{{ photo.id }}/delete">
+          <form method="post" action="/admin/photos/{{ photo.id }}/delete" data-confirm-delete data-confirm-message="本当に削除しますか？">
             <button class="button-secondary" type="submit">削除</button>
           </form>
         </div>

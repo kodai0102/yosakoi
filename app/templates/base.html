@@ -645,6 +645,50 @@
         width: auto;
       }
 
+      .confirm-overlay {
+        align-items: center;
+        background: rgba(17, 24, 39, 0.42);
+        bottom: 0;
+        display: none;
+        justify-content: center;
+        left: 0;
+        padding: 24px;
+        position: fixed;
+        right: 0;
+        top: 0;
+        z-index: 20;
+      }
+
+      .confirm-overlay.is-open {
+        display: flex;
+      }
+
+      .confirm-dialog {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: 0 24px 64px rgba(17, 24, 39, 0.22);
+        max-width: 360px;
+        padding: 24px;
+        width: 100%;
+      }
+
+      .confirm-dialog h2 {
+        font-size: 20px;
+        margin: 0 0 10px;
+      }
+
+      .confirm-dialog p {
+        color: var(--muted);
+        margin: 0 0 20px;
+      }
+
+      .confirm-actions {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+      }
+
       .photo-detail-layout {
         display: grid;
         gap: 24px;
@@ -886,6 +930,62 @@
           </nav>
         </section>
       </div>
+      <div class="confirm-overlay" id="delete-confirm" aria-hidden="true">
+        <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
+          <h2 id="delete-confirm-title">確認</h2>
+          <p id="delete-confirm-message">本当に削除しますか？</p>
+          <div class="confirm-actions">
+            <button class="button-secondary" type="button" data-confirm-cancel>いいえ</button>
+            <button type="button" data-confirm-ok>はい</button>
+          </div>
+        </section>
+      </div>
+      <script>
+        (() => {
+          const overlay = document.getElementById("delete-confirm");
+          if (!overlay) return;
+          const message = document.getElementById("delete-confirm-message");
+          const okButton = overlay.querySelector("[data-confirm-ok]");
+          const cancelButton = overlay.querySelector("[data-confirm-cancel]");
+          let pendingForm = null;
+
+          const closeConfirm = () => {
+            pendingForm = null;
+            overlay.classList.remove("is-open");
+            overlay.setAttribute("aria-hidden", "true");
+          };
+
+          document.addEventListener("submit", (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || !form.matches("[data-confirm-delete]")) {
+              return;
+            }
+            event.preventDefault();
+            pendingForm = form;
+            message.textContent = form.dataset.confirmMessage || "本当に削除しますか？";
+            overlay.classList.add("is-open");
+            overlay.setAttribute("aria-hidden", "false");
+            okButton.focus();
+          });
+
+          okButton.addEventListener("click", () => {
+            if (!pendingForm) return;
+            const form = pendingForm;
+            closeConfirm();
+            HTMLFormElement.prototype.submit.call(form);
+          });
+
+          cancelButton.addEventListener("click", closeConfirm);
+          overlay.addEventListener("click", (event) => {
+            if (event.target === overlay) closeConfirm();
+          });
+          document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && overlay.classList.contains("is-open")) {
+              closeConfirm();
+            }
+          });
+        })();
+      </script>
     {% else %}
       {% block content_public %}{% endblock %}
     {% endif %}

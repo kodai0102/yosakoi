@@ -54,7 +54,7 @@
                 <div class="nav-links">
                   <a class="button button-secondary" href="/admin/albums/{{ album.id }}/photos">写真</a>
                   <a class="button button-secondary" href="/admin/albums/{{ album.id }}/edit">編集</a>
-                  <form method="post" action="/admin/albums/{{ album.id }}/delete">
+                  <form method="post" action="/admin/albums/{{ album.id }}/delete" data-confirm-delete data-confirm-message="本当に削除しますか？">
                     <button class="button-secondary" type="submit">削除</button>
                   </form>
                 </div>
