@@ -174,33 +174,23 @@
       .mobile-brand {
         align-items: center;
         display: none;
-        gap: 8px;
         min-width: 0;
-      }
-
-      .mobile-brand .brand-mark {
-        border-radius: 10px;
-        flex: 0 0 34px;
-        font-size: 17px;
-        height: 34px;
-        width: 34px;
       }
 
       .mobile-brand-text {
         display: grid;
-        gap: 2px;
+        gap: 3px;
         min-width: 0;
       }
 
       .mobile-brand .brand-title {
-        font-size: 15px;
+        font-size: 21px;
+        line-height: 1;
       }
 
       .mobile-brand .brand-subtitle {
-        font-size: 9px;
+        font-size: 10px;
         margin: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
         white-space: nowrap;
       }
 
@@ -847,12 +837,12 @@
         .layout { display: block; }
         .sidebar { display: none; }
         .topbar {
-          height: 72px;
+          height: 70px;
           padding: 0 14px;
         }
         .topbar-left {
           flex: 1;
-          gap: 10px;
+          gap: 12px;
         }
         .menu-button {
           flex: 0 0 auto;
@@ -860,16 +850,15 @@
         }
         .mobile-brand {
           display: flex;
-          flex: 0 1 142px;
+          flex: 1 1 auto;
         }
         .page-title {
-          border-left: 1px solid var(--line);
-          flex: 1 1 auto;
-          font-size: 18px;
+          flex: 0 0 auto;
+          font-size: 13px;
           overflow: hidden;
-          padding-left: 10px;
           text-overflow: ellipsis;
           white-space: nowrap;
+          max-width: 34vw;
         }
         .topbar-actions {
           gap: 8px;
@@ -936,24 +925,15 @@
         .topbar {
           padding: 0 12px;
         }
-        .mobile-brand {
-          flex-basis: 112px;
-        }
-        .mobile-brand .brand-mark {
-          border-radius: 9px;
-          flex-basis: 30px;
-          font-size: 15px;
-          height: 30px;
-          width: 30px;
-        }
         .mobile-brand .brand-title {
-          font-size: 13px;
+          font-size: 19px;
         }
         .mobile-brand .brand-subtitle {
-          font-size: 8px;
+          font-size: 9px;
         }
         .page-title {
-          font-size: 17px;
+          font-size: 12px;
+          max-width: 30vw;
         }
       }
     </style>
@@ -1011,7 +991,6 @@
             <div class="topbar-left">
               <button class="menu-button" type="button" aria-label="menu">☰</button>
               <a class="mobile-brand" href="/">
-                <span class="brand-mark">Y</span>
                 <span class="mobile-brand-text">
                   <span class="brand-title">YOSAKOI</span>
                   <span class="brand-subtitle">チーム写真共有システム</span>
