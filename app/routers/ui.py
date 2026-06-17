@@ -1,7 +1,11 @@
+from datetime import datetime
+from io import BytesIO
+from pathlib import Path
 from uuid import UUID
+from zipfile import ZIP_DEFLATED, ZipFile
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +16,9 @@ from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
 from app.models.download_history import DownloadHistory
 from app.models.photo import Photo
-from app.services.photos import display_datetime, serialize_photo
+from app.services.activity_logs import record_activity
+from app.services.downloads import record_download_history
+from app.services.photos import display_datetime, media_path, serialize_photo, storage_root
 from app.services.tags import list_photos_by_tag, list_tags_with_counts
 
 router = APIRouter(tags=["ui"])
@@ -85,6 +91,41 @@ async def photos_by_ids(db: AsyncSession, photo_ids: list[UUID]) -> list[Photo]:
     return [photos[photo_id] for photo_id in photo_ids if photo_id in photos]
 
 
+async def favorite_photo_ids(db: AsyncSession, user: DeptUser) -> list[UUID]:
+    result = await db.execute(
+        select(AccessLog)
+        .where(AccessLog.user_id == user.login_id, AccessLog.favorite.is_not(None))
+        .order_by(AccessLog.rireki_no.desc())
+    )
+    photo_ids = []
+    seen = set()
+    for log in result.scalars().all():
+        photo_id, is_removed = favorite_value_photo_id(log.favorite)
+        if photo_id is None or photo_id in seen:
+            continue
+        seen.add(photo_id)
+        if not is_removed:
+            photo_ids.append(photo_id)
+    return photo_ids
+
+
+def zip_entry_name(index: int, photo: Photo, used_names: set[str]) -> str:
+    base_name = photo.file_name.strip() or f"{photo.id}"
+    candidate = f"{index:03}_{base_name}"
+    while candidate in used_names:
+        candidate = f"{index:03}_{photo.id}_{base_name}"
+    used_names.add(candidate)
+    return candidate
+
+
+def ensure_download_path(photo: Photo) -> Path | None:
+    root = storage_root().resolve()
+    path = media_path(photo.original_path).resolve()
+    if root not in path.parents or not path.exists() or not path.is_file():
+        return None
+    return path
+
+
 @router.get("/albums", response_class=HTMLResponse)
 async def albums_page(
     request: Request,
@@ -138,24 +179,53 @@ async def favorites_page(
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
-    result = await db.execute(
-        select(AccessLog)
-        .where(AccessLog.user_id == current_user.login_id, AccessLog.favorite.is_not(None))
-        .order_by(AccessLog.rireki_no.desc())
-    )
-    photo_ids = []
-    seen = set()
-    for log in result.scalars().all():
-        photo_id, is_removed = favorite_value_photo_id(log.favorite)
-        if photo_id is None or photo_id in seen:
-            continue
-        seen.add(photo_id)
-        if not is_removed:
-            photo_ids.append(photo_id)
+    photo_ids = await favorite_photo_ids(db, current_user)
     photos = [serialize_photo(photo) for photo in await photos_by_ids(db, photo_ids)]
     return templates.TemplateResponse(
         "favorites.html",
         {"request": request, "current_user": current_user, "photos": photos},
+    )
+
+
+@router.post("/favorites/download")
+async def download_favorites(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(get_current_user),
+) -> Response:
+    photo_ids = await favorite_photo_ids(db, current_user)
+    photos = await photos_by_ids(db, photo_ids)
+    if not photos:
+        return RedirectResponse(url="/favorites", status_code=303)
+
+    archive = BytesIO()
+    used_names: set[str] = set()
+    downloaded_photo_ids = []
+    with ZipFile(archive, "w", compression=ZIP_DEFLATED) as zip_file:
+        for index, photo in enumerate(photos, start=1):
+            path = ensure_download_path(photo)
+            if path is None:
+                continue
+            zip_file.write(path, arcname=zip_entry_name(index, photo, used_names))
+            downloaded_photo_ids.append(str(photo.id))
+            await record_download_history(db, request, current_user, photo)
+
+    if not downloaded_photo_ids:
+        return RedirectResponse(url="/favorites", status_code=303)
+
+    await record_activity(
+        db,
+        request,
+        "photo_download",
+        user=current_user,
+        target_id=",".join(downloaded_photo_ids),
+    )
+    archive.seek(0)
+    filename = f"favorites_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    return Response(
+        archive.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

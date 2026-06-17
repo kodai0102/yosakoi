@@ -8,6 +8,11 @@
     <h1>お気に入り</h1>
     <p class="page-description">後から見返したい写真をまとめて確認できます。</p>
   </div>
+  {% if photos %}
+    <form method="post" action="/favorites/download">
+      <button type="submit">まとめてダウンロード</button>
+    </form>
+  {% endif %}
 </div>
 
 <div class="photo-grid">
