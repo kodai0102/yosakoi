@@ -174,7 +174,16 @@
       .mobile-brand {
         align-items: center;
         display: none;
+        gap: 7px;
         min-width: 0;
+      }
+
+      .mobile-brand .brand-mark {
+        border-radius: 8px;
+        flex: 0 0 28px;
+        font-size: 14px;
+        height: 28px;
+        width: 28px;
       }
 
       .mobile-brand-text {
@@ -991,6 +1000,7 @@
             <div class="topbar-left">
               <button class="menu-button" type="button" aria-label="menu">☰</button>
               <a class="mobile-brand" href="/">
+                <span class="brand-mark">Y</span>
                 <span class="mobile-brand-text">
                   <span class="brand-title">YOSAKOI</span>
                   <span class="brand-subtitle">チーム写真共有システム</span>
