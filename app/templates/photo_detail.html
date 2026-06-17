@@ -25,9 +25,7 @@
             <button class="button-secondary" type="submit">♡ お気に入り</button>
           {% endif %}
         </form>
-        <form method="post" action="/photos/{{ photo.id }}/download">
-          <button type="submit">⇩ 写真を保存</button>
-        </form>
+        <a class="button" href="/photos/{{ photo.id }}/download">⇩ 写真を保存</a>
       </div>
       <div class="detail-list">
         <div class="detail-item">
