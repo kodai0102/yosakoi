@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block page_title %}写真を保存{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>写真を保存</h1>
+    <p class="page-description">{{ photo.file_name }}</p>
+  </div>
+  <a class="button button-secondary" href="/photos/{{ photo.id }}">写真詳細へ</a>
+</div>
+
+<section class="photo-save-layout">
+  <div class="photo-save-frame">
+    <img
+      class="photo-save-image"
+      src="/photos/{{ photo.id }}/save-file"
+      alt="{{ photo.file_name }}"
+      draggable="false"
+    >
+  </div>
+  <div class="panel">
+    <div class="panel-body">
+      <div class="toolbar">
+        <a class="button" href="/photos/{{ photo.id }}/save-file" target="_blank" rel="noopener">画像だけを開く</a>
+        <a class="button button-secondary" href="/albums/{{ album.id }}">写真一覧へ</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

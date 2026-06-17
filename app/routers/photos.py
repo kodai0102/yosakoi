@@ -86,10 +86,7 @@ async def record_and_redirect_to_save(
     await record_download_history(db, request, current_user, photo)
     await record_activity(db, request, "photo_download", user=current_user, target_id=str(photo_id))
     ensure_media_path(photo.original_path)
-    return RedirectResponse(
-        url=f"/photos/{photo_id}/save",
-        status_code=status.HTTP_303_SEE_OTHER,
-    )
+    return RedirectResponse(url=f"/photos/{photo_id}/save", status_code=status.HTTP_303_SEE_OTHER)
 
 
 async def is_favorite_photo(db: AsyncSession, user: DeptUser, photo_id: UUID) -> bool:
@@ -293,7 +290,29 @@ async def download_photo_link(
     )
 
 
-@router.get("/photos/{photo_id}/save")
+@router.get("/photos/{photo_id}/save", response_class=HTMLResponse)
+async def save_photo_page(
+    request: Request,
+    photo_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(get_current_user),
+) -> HTMLResponse:
+    photo = await get_photo_or_404(db, photo_id)
+    album = await get_album_or_404(db, photo.album_id)
+    if not is_album_published(album) and not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="写真が存在しません")
+    return templates.TemplateResponse(
+        "photo_save.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "album": serialize_album(album),
+            "photo": serialize_photo(photo),
+        },
+    )
+
+
+@router.get("/photos/{photo_id}/save-file")
 async def save_photo_file(
     photo_id: UUID,
     db: AsyncSession = Depends(get_db),
