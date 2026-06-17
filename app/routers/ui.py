@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.dependencies.auth import get_current_user, require_admin
 from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
+from app.models.download_history import DownloadHistory
 from app.models.photo import Photo
 from app.services.photos import display_datetime, serialize_photo
 from app.services.tags import list_photos_by_tag, list_tags_with_counts
@@ -61,18 +62,6 @@ def sample_photos() -> list[dict[str, object]]:
         {"id": i, "title": f"photo-{i:03}", "taken_at": "2025/08/02 14:23"}
         for i in range(1, 13)
     ]
-
-
-def parse_photo_ids(value: str | None) -> list[UUID]:
-    if not value:
-        return []
-    ids = []
-    for raw_id in value.split(","):
-        try:
-            ids.append(UUID(raw_id.strip()))
-        except ValueError:
-            continue
-    return ids
 
 
 def favorite_value_photo_id(value: str | None) -> tuple[UUID | None, bool]:
@@ -217,19 +206,17 @@ async def downloads_page(
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     result = await db.execute(
-        select(AccessLog)
+        select(DownloadHistory)
         .where(
-            AccessLog.user_id == current_user.login_id,
-            AccessLog.pic_download_time.is_not(None),
-            AccessLog.pic_download_list.is_not(None),
+            DownloadHistory.user_id == current_user.login_id,
         )
-        .order_by(AccessLog.rireki_no.desc())
+        .order_by(DownloadHistory.downloaded_at.desc(), DownloadHistory.id.desc())
     )
     rows = []
-    for log in result.scalars().all():
-        for photo in await photos_by_ids(db, parse_photo_ids(log.pic_download_list)):
+    for history in result.scalars().all():
+        for photo in await photos_by_ids(db, [history.photo_id]):
             item = serialize_photo(photo)
-            item["downloaded_at_label"] = display_datetime(log.pic_download_time)
+            item["downloaded_at_label"] = display_datetime(history.downloaded_at)
             rows.append(item)
     return templates.TemplateResponse(
         "downloads.html",

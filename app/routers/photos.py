@@ -1,4 +1,5 @@
 from pathlib import Path
+from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
@@ -11,11 +12,13 @@ from app.db.session import get_db
 from app.dependencies.auth import get_current_user, require_admin
 from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
+from app.models.photo import Photo
 from app.routers.albums import get_album_or_404
 from app.schemas.album import AlbumRead
 from app.schemas.photo import PhotoRead
 from app.services.activity_logs import record_activity
 from app.services.albums import is_album_published, serialize_album
+from app.services.downloads import image_file_type, record_download_history
 from app.services.photos import (
     create_photo,
     get_photo_or_404,
@@ -55,6 +58,19 @@ def ensure_media_path(object_path: str) -> Path:
     if not path.exists() or not path.is_file():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="画像が存在しません")
     return path
+
+
+def inline_image_response(photo: Photo) -> FileResponse:
+    image_file_type(photo)
+    path = ensure_media_path(photo.original_path)
+    response = FileResponse(
+        path,
+        media_type=photo.content_type,
+    )
+    response.headers["Content-Disposition"] = (
+        f"inline; filename*=UTF-8''{quote(photo.file_name)}"
+    )
+    return response
 
 
 async def is_favorite_photo(db: AsyncSession, user: DeptUser, photo_id: UUID) -> bool:
@@ -234,18 +250,31 @@ async def download_photo_form(
     photo_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
+) -> RedirectResponse:
+    photo = await get_photo_or_404(db, photo_id)
+    album = await get_album_or_404(db, photo.album_id)
+    if not is_album_published(album) and not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="写真が存在しません")
+    await record_download_history(db, request, current_user, photo)
+    await record_activity(db, request, "photo_download", user=current_user, target_id=str(photo_id))
+    ensure_media_path(photo.original_path)
+    return RedirectResponse(
+        url=f"/photos/{photo_id}/save",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.get("/photos/{photo_id}/save")
+async def save_photo_file(
+    photo_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(get_current_user),
 ) -> FileResponse:
     photo = await get_photo_or_404(db, photo_id)
     album = await get_album_or_404(db, photo.album_id)
     if not is_album_published(album) and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="写真が存在しません")
-    await record_activity(db, request, "photo_download", user=current_user, target_id=str(photo_id))
-    path = ensure_media_path(photo.original_path)
-    return FileResponse(
-        path,
-        filename=photo.file_name,
-        media_type=photo.content_type,
-    )
+    return inline_image_response(photo)
 
 
 @router.get("/api/albums/{album_id}/photos")
