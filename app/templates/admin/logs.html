@@ -33,6 +33,7 @@
             <th>操作</th>
             <th>ログイン時刻</th>
             <th>ログアウト時刻</th>
+            <th>対象</th>
             <th>結果</th>
           </tr>
         </thead>
@@ -41,11 +42,14 @@
             <tr>
               <td>{{ log.at }}</td>
               <td>{{ log.user }}</td>
-              <td>{{ log.action }}</td>
+              <td>{{ log.action_label }}</td>
               <td>{{ log.login_time or "-" }}</td>
               <td>{{ log.logout_time or "-" }}</td>
+              <td>{{ log.target }}</td>
               <td><span class="badge badge-success">成功</span></td>
             </tr>
+          {% else %}
+            <tr><td colspan="7">操作ログはまだありません。</td></tr>
           {% endfor %}
         </tbody>
       </table>

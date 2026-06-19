@@ -7,12 +7,14 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user, require_admin
 from app.models.access_log import AccessLog
+from app.models.album import Album
+from app.models.tag import DancerTag
 from app.models.dept_user import DeptUser
 from app.models.download_history import DownloadHistory
 from app.models.photo import Photo
@@ -124,6 +126,85 @@ def ensure_download_path(photo: Photo) -> Path | None:
     if root not in path.parents or not path.exists() or not path.is_file():
         return None
     return path
+
+
+def operation_label(action: str) -> str:
+    labels = {
+        "login_success": "ログイン",
+        "login_failed": "ログイン失敗",
+        "logout": "ログアウト",
+        "photo_download": "写真ダウンロード",
+        "photo_upload": "写真アップロード",
+        "favorite": "お気に入り追加",
+        "favorite_remove": "お気に入り解除",
+        "user_create": "ユーザー作成",
+        "user_update": "ユーザー更新",
+        "user_activate": "ユーザー有効化",
+        "user_deactivate": "ユーザー無効化",
+        "user_import": "CSV一括登録",
+    }
+    return labels.get(action, action)
+
+
+def operation_category(action: str) -> str:
+    if action.startswith("login") or action == "logout":
+        return "認証"
+    if action.startswith("user"):
+        return "ユーザー"
+    if action.startswith("photo"):
+        return "写真"
+    if action.startswith("favorite"):
+        return "お気に入り"
+    return "操作"
+
+
+def log_event(
+    log: AccessLog,
+    action: str,
+    at: datetime | None,
+    target: str | None = None,
+) -> dict[str, object] | None:
+    if at is None:
+        return None
+    return {
+        "id": log.rireki_no,
+        "action": action,
+        "action_label": operation_label(action),
+        "category": operation_category(action),
+        "user": log.user_name or log.user_id or "-",
+        "at": display_datetime(at),
+        "at_value": at,
+        "login_time": display_datetime(log.logon_time) if action == "login_success" else "",
+        "logout_time": display_datetime(log.logoff_time) if action == "logout" else "",
+        "target": target or "-",
+    }
+
+
+def access_log_events(logs: list[AccessLog]) -> list[dict[str, object]]:
+    events = []
+    for log in logs:
+        candidates = [
+            log_event(log, "login_success", log.logon_time),
+            log_event(log, "logout", log.logoff_time),
+            log_event(log, "photo_download", log.pic_download_time, log.pic_download_list),
+            log_event(log, "photo_upload", log.pic_upload_time, log.pic_upload_list),
+            log_event(
+                log,
+                "favorite_remove" if (log.favorite or "").startswith(UNFAVORITE_PREFIX) else "favorite",
+                None if log.favorite is None else log.operation_time or log.logon_time or log.pic_download_time or log.pic_upload_time,
+                log.favorite,
+            ),
+            log_event(log, log.operation_name or "", log.operation_time, log.operation_target)
+            if log.operation_name
+            else None,
+        ]
+        events.extend(event for event in candidates if event is not None)
+    return sorted(events, key=lambda event: event["at_value"], reverse=True)
+
+
+async def scalar_count(db: AsyncSession, query) -> int:
+    result = await db.execute(query)
+    return int(result.scalar_one() or 0)
 
 
 @router.get("/albums", response_class=HTMLResponse)
@@ -297,10 +378,58 @@ async def downloads_page(
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard_page(
     request: Request,
+    db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
+    now = datetime.now().astimezone()
+    user_count = await scalar_count(db, select(func.count()).select_from(DeptUser))
+    published_album_count = await scalar_count(
+        db,
+        select(func.count())
+        .select_from(Album)
+        .where(Album.publish_from <= now, Album.publish_to >= now),
+    )
+    photo_count = await scalar_count(
+        db,
+        select(func.count()).select_from(Photo).where(Photo.is_deleted.is_(False)),
+    )
+    tag_count = await scalar_count(db, select(func.count()).select_from(DancerTag))
+
+    album_result = await db.execute(select(Album).order_by(Album.created_at.desc(), Album.id.desc()).limit(2))
+    recent_albums = []
+    for album in album_result.scalars().all():
+        count = await scalar_count(
+            db,
+            select(func.count()).select_from(Photo).where(
+                Photo.album_id == album.id,
+                Photo.is_deleted.is_(False),
+            ),
+        )
+        recent_albums.append(
+            {
+                "id": album.id,
+                "title": album.title,
+                "status": "公開中" if album.publish_from <= now <= album.publish_to else "非公開",
+                "count": count,
+            }
+        )
+
+    log_result = await db.execute(select(AccessLog).order_by(AccessLog.rireki_no.desc()).limit(20))
+    recent_logs = access_log_events(list(log_result.scalars().all()))[:2]
     return templates.TemplateResponse(
-        "admin/dashboard.html", {"request": request, "current_user": current_user}
+        "admin/dashboard.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "stats": {
+                "user_count": user_count,
+                "published_album_count": published_album_count,
+                "photo_count": photo_count,
+                "tag_count": tag_count,
+            },
+            "recent_albums": recent_albums,
+            "recent_logs": recent_logs,
+        },
     )
 
 
@@ -354,31 +483,11 @@ async def admin_tags_page(
 @router.get("/admin/logs", response_class=HTMLResponse)
 async def admin_logs_page(
     request: Request,
+    db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
-    logs = [
-        {
-            "action": "login_success",
-            "user": "管理者",
-            "login_time": "202606131710",
-            "logout_time": "",
-            "at": "2026/06/13 17:10",
-        },
-        {
-            "action": "logout",
-            "user": "管理者",
-            "login_time": "",
-            "logout_time": "202606131705",
-            "at": "2026/06/13 17:05",
-        },
-        {
-            "action": "user_create",
-            "user": "管理者",
-            "login_time": "",
-            "logout_time": "",
-            "at": "2026/06/13 17:00",
-        },
-    ]
+    result = await db.execute(select(AccessLog).order_by(AccessLog.rireki_no.desc()).limit(200))
+    logs = access_log_events(list(result.scalars().all()))[:100]
     return templates.TemplateResponse(
         "admin/logs.html",
         {"request": request, "current_user": current_user, "logs": logs},

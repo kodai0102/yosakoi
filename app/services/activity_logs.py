@@ -78,6 +78,7 @@ async def record_activity(
             AccessLog(
                 user_name=user.display_name if user else user_name,
                 user_id=user.login_id if user else None,
+                operation_time=activity_time,
                 favorite=target_id,
             )
         )
@@ -89,8 +90,20 @@ async def record_activity(
             AccessLog(
                 user_name=user.display_name if user else user_name,
                 user_id=user.login_id if user else None,
+                operation_time=activity_time,
                 favorite=f"unfavorite:{target_id}",
             )
         )
         await db.commit()
         return
+
+    db.add(
+        AccessLog(
+            user_name=user.display_name if user else user_name,
+            user_id=user.login_id if user else None,
+            operation_time=activity_time,
+            operation_name=action_type,
+            operation_target=target_id,
+        )
+    )
+    await db.commit()

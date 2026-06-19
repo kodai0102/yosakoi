@@ -12,19 +12,19 @@
 
 <section class="stats-grid">
   <div class="stat-card">
-    <span class="stat-value">18</span>
+    <span class="stat-value">{{ stats.user_count }}</span>
     <span class="stat-label">登録ユーザー</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value">6</span>
+    <span class="stat-value">{{ stats.published_album_count }}</span>
     <span class="stat-label">公開アルバム</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value">1,214</span>
+    <span class="stat-value">{{ stats.photo_count }}</span>
     <span class="stat-label">写真枚数</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value">24</span>
+    <span class="stat-value">{{ stats.tag_count }}</span>
     <span class="stat-label">タグ数</span>
   </div>
 </section>
@@ -56,22 +56,18 @@
         <a class="button button-secondary" href="/admin/albums">一覧</a>
       </div>
       <div class="mini-list">
-        <div class="mini-item">
-          <span class="mini-thumb"></span>
-          <span>
-            <strong>第25回 どまつり</strong><br>
-            <span class="meta">公開中 / 245枚</span>
-          </span>
-          <span class="badge badge-success">公開中</span>
-        </div>
-        <div class="mini-item">
-          <span class="mini-thumb"></span>
-          <span>
-            <strong>よさこい祭り 2025</strong><br>
-            <span class="meta">公開中 / 312枚</span>
-          </span>
-          <span class="badge badge-success">公開中</span>
-        </div>
+        {% for album in recent_albums %}
+          <div class="mini-item">
+            <span class="mini-thumb"></span>
+            <span>
+              <strong>{{ album.title }}</strong><br>
+              <span class="meta">{{ album.status }} / {{ album.count }}枚</span>
+            </span>
+            <span class="badge {{ 'badge-success' if album.status == '公開中' else 'badge-muted' }}">{{ album.status }}</span>
+          </div>
+        {% else %}
+          <p class="empty-state">アルバムはまだありません。</p>
+        {% endfor %}
       </div>
     </div>
   </section>
@@ -83,20 +79,17 @@
         <a class="button button-secondary" href="/admin/logs">ログ</a>
       </div>
       <div class="mini-list">
-        <div class="mini-item">
-          <span>
-            <strong>login_success</strong><br>
-            <span class="meta">管理者 / 2026/06/13 17:10</span>
-          </span>
-          <span class="badge badge-muted">認証</span>
-        </div>
-        <div class="mini-item">
-          <span>
-            <strong>user_create</strong><br>
-            <span class="meta">管理者 / 2026/06/13 17:00</span>
-          </span>
-          <span class="badge badge-muted">管理</span>
-        </div>
+        {% for log in recent_logs %}
+          <div class="mini-item">
+            <span>
+              <strong>{{ log.action_label }}</strong><br>
+              <span class="meta">{{ log.user }} / {{ log.at }}</span>
+            </span>
+            <span class="badge badge-muted">{{ log.category }}</span>
+          </div>
+        {% else %}
+          <p class="empty-state">操作ログはまだありません。</p>
+        {% endfor %}
       </div>
     </div>
   </section>
