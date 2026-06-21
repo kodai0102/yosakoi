@@ -125,6 +125,107 @@ DB ボリュームも削除する場合:
 docker compose down -v
 ```
 
+## 本番デプロイ準備
+
+本番環境では、開発用の `docker-compose.yml` ではなく `docker-compose.prod.yml` を利用します。
+開発用構成はソースコードをコンテナへマウントし、`--reload` で起動します。
+本番用構成はイメージ内のコードで起動し、DB と画像保存先を Docker volume で永続化します。
+
+### 本番用 .env 作成
+
+```bash
+cp .env.production.example .env
+```
+
+`.env` の以下は必ず本番用の強い値に変更してください。
+
+- `POSTGRES_PASSWORD`
+- `DATABASE_URL`
+- `JWT_SECRET_KEY`
+- `INITIAL_ADMIN_PASSWORD`
+- `APP_PORT`
+
+`DATABASE_URL` のパスワード部分は `POSTGRES_PASSWORD` と一致させます。
+`APP_PORT` はEC2上で直接疎通確認するポートです。通常は `8000` のままで構いません。
+
+### 本番用 Docker Compose 起動
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+マイグレーション:
+
+```bash
+docker compose -f docker-compose.prod.yml exec app alembic upgrade head
+```
+
+初期管理者作成:
+
+```bash
+docker compose -f docker-compose.prod.yml exec app python -m app.scripts.create_initial_admin
+```
+
+ヘルスチェック:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/health/db
+```
+
+既存の開発用アプリと同じPCでリハーサルする場合は、ポート競合を避けるため一時的に `APP_PORT=8010` などへ変更して起動します。
+
+ログ確認:
+
+```bash
+docker compose -f docker-compose.prod.yml logs -f app
+```
+
+停止:
+
+```bash
+docker compose -f docker-compose.prod.yml down
+```
+
+DB と画像データも削除する場合のみ:
+
+```bash
+docker compose -f docker-compose.prod.yml down -v
+```
+
+### 永続化対象
+
+本番用 Docker Compose では以下を Docker volume に保存します。
+
+- `postgres_data_prod`: PostgreSQL データ
+- `app_storage`: アップロード画像、サムネイル画像
+
+EC2 運用では、この2つをバックアップ対象にしてください。
+
+## EC2 デプロイ手順
+
+1. EC2 インスタンスを作成します。
+2. セキュリティグループで SSH は管理者IPのみに制限します。
+3. HTTP/HTTPS 公開用に `80` / `443` を開放します。
+4. Docker と Docker Compose plugin をインストールします。
+5. アプリケーションソースを EC2 に配置します。
+6. `.env.production.example` をもとに `.env` を作成します。
+7. `docker compose -f docker-compose.prod.yml up -d --build` を実行します。
+8. `alembic upgrade head` を実行します。
+9. 初期管理者を作成します。
+10. `/health` と `/health/db` を確認します。
+
+まずは `8000` 番ポートで疎通確認できますが、本運用では Nginx などのリバースプロキシを前段に置き、HTTPS 化してください。
+
+### EC2 本運用前チェック
+
+- `.env` に初期パスワードや弱いJWT秘密鍵が残っていないこと
+- DBポート `5432` を外部公開していないこと
+- 画像保存 volume のバックアップ方針があること
+- PostgreSQL volume のバックアップ方針があること
+- HTTPS でアクセスできること
+- 初期管理者パスワードを運用開始前に変更していること
+
 ## テーブル構成
 
 ### ユーザーアカウントテーブル
