@@ -12,20 +12,26 @@
 
 <section class="panel">
   <div class="panel-body">
-    <div class="toolbar">
-      <div class="nav-links">
-        <select aria-label="操作種別">
-          <option>すべての操作</option>
-          <option>ログイン</option>
-          <option>ユーザー管理</option>
-          <option>写真操作</option>
+    <form class="toolbar log-toolbar" method="get" action="/admin/logs">
+      <div class="nav-links log-filters">
+        <select name="action" aria-label="操作種別" onchange="this.form.submit()">
+          <option value="all" {% if selected_action == "all" %}selected{% endif %}>すべての操作</option>
+          <option value="auth" {% if selected_action == "auth" %}selected{% endif %}>ログイン・ログアウト</option>
+          <option value="login_success" {% if selected_action == "login_success" %}selected{% endif %}>ログイン</option>
+          <option value="logout" {% if selected_action == "logout" %}selected{% endif %}>ログアウト</option>
+          <option value="photo_download" {% if selected_action == "photo_download" %}selected{% endif %}>写真ダウンロード</option>
+          <option value="photo_upload" {% if selected_action == "photo_upload" %}selected{% endif %}>写真アップロード</option>
+          <option value="favorite" {% if selected_action == "favorite" %}selected{% endif %}>お気に入り追加</option>
+          <option value="favorite_remove" {% if selected_action == "favorite_remove" %}selected{% endif %}>お気に入り解除</option>
+          <option value="user" {% if selected_action == "user" %}selected{% endif %}>ユーザー管理</option>
         </select>
-        <input aria-label="ログ検索" placeholder="ユーザー名・操作で検索">
+        <input name="q" value="{{ query }}" aria-label="ログ検索" placeholder="ユーザー名・操作で検索">
+        <button type="submit">検索</button>
       </div>
       <span class="meta">{{ logs | length }}件</span>
-    </div>
+    </form>
     <div class="table-wrap">
-      <table>
+      <table class="log-table">
         <thead>
           <tr>
             <th>日時</th>

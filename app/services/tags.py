@@ -24,7 +24,9 @@ def parse_tag_names(value: str) -> list[str]:
 async def list_tags_with_counts(db: AsyncSession, q: str | None = None) -> list[dict[str, object]]:
     query = (
         select(DancerTag, func.count(PhotoDancerTag.id).label("photo_count"))
-        .outerjoin(PhotoDancerTag, DancerTag.id == PhotoDancerTag.dancer_tag_id)
+        .join(PhotoDancerTag, DancerTag.id == PhotoDancerTag.dancer_tag_id)
+        .join(Photo, Photo.id == PhotoDancerTag.photo_id)
+        .where(Photo.is_deleted.is_(False))
         .group_by(DancerTag.id)
         .order_by(DancerTag.name.asc())
     )

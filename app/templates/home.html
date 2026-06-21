@@ -21,7 +21,12 @@
       <div class="album-grid">
         {% for album in albums %}
           <a class="album-card" href="/albums/{{ album.id }}">
-            <div class="album-thumb"><span class="album-status">{{ album.status }}</span></div>
+            <div class="album-thumb">
+              {% if album.thumbnail_url %}
+                <img src="{{ album.thumbnail_url }}" alt="{{ album.title }}">
+              {% endif %}
+              <span class="album-status">{{ album.status }}</span>
+            </div>
             <div class="album-body">
               <h2 class="album-title">{{ album.title }}</h2>
               <p class="album-detail">{{ album.period }}</p>
@@ -47,7 +52,11 @@
         <h2 class="detail-title">アルバム詳細</h2>
         <span>×</span>
       </div>
-      <div class="detail-image"></div>
+      <div class="detail-image">
+        {% if first_album.thumbnail_url %}
+          <img src="{{ first_album.thumbnail_url }}" alt="{{ first_album.title }}">
+        {% endif %}
+      </div>
       <span class="badge" style="background: var(--brand); color: #fff;">{{ first_album.status }}</span>
       <h2 style="margin: 16px 0 0;">{{ first_album.title }}</h2>
       <div class="detail-list">
@@ -73,7 +82,6 @@
         </div>
       </div>
       <a class="button" style="width: 100%;" href="/albums/{{ first_album.id }}">このアルバムを見る</a>
-      <a class="button button-secondary" style="width: 100%; margin-top: 12px;" href="#">お気に入りに追加</a>
     </aside>
   {% endif %}
 </div>

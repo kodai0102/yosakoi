@@ -32,6 +32,10 @@ class DeptUser(Base):
         return self.user_name
 
     @property
+    def is_admin(self) -> bool:
+        return self.role == "admin"
+
+    @property
     def password_hash(self) -> str:
         return self.password
 

@@ -175,7 +175,7 @@ def log_event(
         "at": display_datetime(at),
         "at_value": at,
         "login_time": display_datetime(log.logon_time) if action == "login_success" else "",
-        "logout_time": display_datetime(log.logoff_time) if action == "logout" else "",
+        "logout_time": display_datetime(log.logoff_time) if action in {"login_success", "logout"} else "",
         "target": target or "-",
     }
 
@@ -185,7 +185,7 @@ def access_log_events(logs: list[AccessLog]) -> list[dict[str, object]]:
     for log in logs:
         candidates = [
             log_event(log, "login_success", log.logon_time),
-            log_event(log, "logout", log.logoff_time),
+            log_event(log, "logout", log.logoff_time) if log.logon_time is None else None,
             log_event(log, "photo_download", log.pic_download_time, log.pic_download_list),
             log_event(log, "photo_upload", log.pic_upload_time, log.pic_upload_list),
             log_event(
@@ -200,6 +200,112 @@ def access_log_events(logs: list[AccessLog]) -> list[dict[str, object]]:
         ]
         events.extend(event for event in candidates if event is not None)
     return sorted(events, key=lambda event: event["at_value"], reverse=True)
+
+
+def filter_log_events(
+    events: list[dict[str, object]],
+    action_filter: str | None,
+    q: str | None,
+) -> list[dict[str, object]]:
+    filtered = events
+    if action_filter and action_filter != "all":
+        if action_filter == "auth":
+            filtered = [event for event in filtered if event["category"] == "認証"]
+        elif action_filter == "user":
+            filtered = [event for event in filtered if event["category"] == "ユーザー"]
+        elif action_filter == "photo":
+            filtered = [event for event in filtered if event["category"] == "写真"]
+        elif action_filter == "favorite":
+            filtered = [event for event in filtered if event["category"] == "お気に入り"]
+        else:
+            filtered = [event for event in filtered if event["action"] == action_filter]
+
+    keyword = (q or "").strip().lower()
+    if keyword:
+        filtered = [
+            event
+            for event in filtered
+            if keyword
+            in " ".join(
+                [
+                    str(event.get("user") or ""),
+                    str(event.get("action_label") or ""),
+                    str(event.get("category") or ""),
+                    str(event.get("target") or ""),
+                ]
+            ).lower()
+        ]
+    return filtered
+
+
+async def replace_photo_download_targets(
+    db: AsyncSession,
+    events: list[dict[str, object]],
+) -> None:
+    photo_ids: set[UUID] = set()
+    for event in events:
+        if event["action"] != "photo_download":
+            continue
+        target = str(event.get("target") or "")
+        for raw_id in target.split(","):
+            try:
+                photo_ids.add(UUID(raw_id.strip()))
+            except ValueError:
+                continue
+
+    if not photo_ids:
+        return
+
+    result = await db.execute(select(Photo.id, Photo.file_name).where(Photo.id.in_(photo_ids)))
+    file_names = {photo_id: file_name for photo_id, file_name in result.all()}
+    for event in events:
+        if event["action"] != "photo_download":
+            continue
+        labels = []
+        for raw_id in str(event.get("target") or "").split(","):
+            try:
+                photo_id = UUID(raw_id.strip())
+            except ValueError:
+                continue
+            labels.append(file_names.get(photo_id, raw_id.strip()))
+        if labels:
+            event["target"] = ", ".join(labels)
+
+
+async def replace_user_operation_targets(
+    db: AsyncSession,
+    events: list[dict[str, object]],
+) -> None:
+    user_numbers: set[int] = set()
+    for event in events:
+        if event["category"] != "ユーザー":
+            continue
+        try:
+            user_numbers.add(int(str(event.get("target") or "").strip()))
+        except ValueError:
+            continue
+
+    if not user_numbers:
+        return
+
+    result = await db.execute(
+        select(DeptUser.user_no, DeptUser.user_name, DeptUser.user_id).where(
+            DeptUser.user_no.in_(user_numbers)
+        )
+    )
+    user_labels = {
+        user_no: f"{user_name} ({user_id})"
+        for user_no, user_name, user_id in result.all()
+    }
+    for event in events:
+        if event["category"] != "ユーザー":
+            continue
+        try:
+            user_no = int(str(event.get("target") or "").strip())
+        except ValueError:
+            continue
+        if user_no in user_labels:
+            event["target"] = user_labels[user_no]
 
 
 async def scalar_count(db: AsyncSession, query) -> int:
@@ -356,22 +462,45 @@ async def downloads_page(
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
-    result = await db.execute(
-        select(DownloadHistory)
-        .where(
-            DownloadHistory.user_id == current_user.login_id,
-        )
-        .order_by(DownloadHistory.downloaded_at.desc(), DownloadHistory.id.desc())
+    query = select(DownloadHistory).order_by(
+        DownloadHistory.downloaded_at.desc(),
+        DownloadHistory.id.desc(),
     )
+    if not current_user.is_admin:
+        query = query.where(DownloadHistory.user_id == current_user.login_id)
+    result = await db.execute(query)
+    histories = list(result.scalars().all())
+    photo_ids = [history.photo_id for history in histories]
+    photo_result = await db.execute(select(Photo).where(Photo.id.in_(photo_ids))) if photo_ids else None
+    photos = {photo.id: photo for photo in photo_result.scalars().all()} if photo_result else {}
+    user_ids = {history.user_id for history in histories}
+    user_result = await db.execute(select(DeptUser.user_id, DeptUser.user_name).where(DeptUser.user_id.in_(user_ids))) if user_ids else None
+    user_names = {user_id: user_name for user_id, user_name in user_result.all()} if user_result else {}
     rows = []
-    for history in result.scalars().all():
-        for photo in await photos_by_ids(db, [history.photo_id]):
+    for history in histories:
+        photo = photos.get(history.photo_id)
+        if photo is None:
+            item = {
+                "id": "",
+                "album_id": "-",
+                "file_name": history.original_filename,
+                "is_deleted": True,
+            }
+        else:
             item = serialize_photo(photo)
-            item["downloaded_at_label"] = display_datetime(history.downloaded_at)
-            rows.append(item)
+        item["downloaded_at_label"] = display_datetime(history.downloaded_at)
+        item["downloaded_by"] = user_names.get(history.user_id, history.user_id)
+        item["downloaded_filename"] = history.original_filename
+        item["file_type"] = history.file_type
+        rows.append(item)
     return templates.TemplateResponse(
         "downloads.html",
-        {"request": request, "current_user": current_user, "photos": rows},
+        {
+            "request": request,
+            "current_user": current_user,
+            "photos": rows,
+            "show_download_user": current_user.is_admin,
+        },
     )
 
 
@@ -483,12 +612,23 @@ async def admin_tags_page(
 @router.get("/admin/logs", response_class=HTMLResponse)
 async def admin_logs_page(
     request: Request,
+    action: str = "all",
+    q: str = "",
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     result = await db.execute(select(AccessLog).order_by(AccessLog.rireki_no.desc()).limit(200))
-    logs = access_log_events(list(result.scalars().all()))[:100]
+    logs = access_log_events(list(result.scalars().all()))
+    await replace_photo_download_targets(db, logs)
+    await replace_user_operation_targets(db, logs)
+    logs = filter_log_events(logs, action, q)[:100]
     return templates.TemplateResponse(
         "admin/logs.html",
-        {"request": request, "current_user": current_user, "logs": logs},
+        {
+            "request": request,
+            "current_user": current_user,
+            "logs": logs,
+            "selected_action": action,
+            "query": q,
+        },
     )

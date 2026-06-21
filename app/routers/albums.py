@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from types import SimpleNamespace
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
@@ -20,6 +21,7 @@ from app.services.albums import (
     now_utc,
     serialize_album,
 )
+from app.services.photos import make_thumbnail, open_image, save_bytes, validate_upload
 
 router = APIRouter(tags=["albums"])
 templates = Jinja2Templates(directory="app/templates")
@@ -87,6 +89,17 @@ def album_form_values(
         publish_from=publish_from,
         publish_to=publish_to,
     )
+
+
+async def save_album_thumbnail(file: UploadFile | None) -> str | None:
+    if file is None or not file.filename:
+        return None
+    payload = await file.read()
+    validate_upload(file, payload)
+    image = open_image(payload)
+    object_key = f"album-thumbnails/{uuid4()}.webp"
+    save_bytes(object_key, make_thumbnail(image))
+    return object_key
 
 
 def validation_message(exc: ValidationError) -> str:
@@ -209,7 +222,7 @@ async def create_album_form(
     event_date: date = Form(...),
     title: str = Form(...),
     description: str = Form(""),
-    thumbnail_path: str = Form(""),
+    thumbnail_file: UploadFile | None = File(None),
     publish_from: datetime = Form(...),
     publish_to: datetime = Form(...),
     db: AsyncSession = Depends(get_db),
@@ -221,11 +234,12 @@ async def create_album_form(
         event_date,
         title,
         description,
-        thumbnail_path,
+        "",
         publish_from,
         publish_to,
     )
     try:
+        thumbnail_path = await save_album_thumbnail(thumbnail_file)
         payload = AlbumCreate(
             year=year,
             event_name=event_name,
@@ -275,7 +289,7 @@ async def update_album_form(
     event_date: date = Form(...),
     title: str = Form(...),
     description: str = Form(""),
-    thumbnail_path: str = Form(""),
+    thumbnail_file: UploadFile | None = File(None),
     publish_from: datetime = Form(...),
     publish_to: datetime = Form(...),
     db: AsyncSession = Depends(get_db),
@@ -287,12 +301,14 @@ async def update_album_form(
         event_date,
         title,
         description,
-        thumbnail_path,
+        "",
         publish_from,
         publish_to,
     )
     form_album.id = album_id
     try:
+        current_album = await get_album_or_404(db, album_id)
+        thumbnail_path = await save_album_thumbnail(thumbnail_file) or current_album.thumbnail_path
         payload = AlbumUpdate(
             year=year,
             event_name=event_name,

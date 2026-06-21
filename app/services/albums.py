@@ -40,6 +40,7 @@ def album_status(album: Album) -> str:
 
 
 def serialize_album(album: Album) -> dict[str, object]:
+    thumbnail_path = album.thumbnail_path
     return {
         "id": album.id,
         "year": album.year,
@@ -47,7 +48,8 @@ def serialize_album(album: Album) -> dict[str, object]:
         "event_date": album.event_date,
         "title": album.title,
         "description": album.description,
-        "thumbnail_path": album.thumbnail_path,
+        "thumbnail_path": thumbnail_path,
+        "thumbnail_url": f"/media/{thumbnail_path}" if thumbnail_path else "",
         "publish_from": album.publish_from,
         "publish_to": album.publish_to,
         "created_at": album.created_at,

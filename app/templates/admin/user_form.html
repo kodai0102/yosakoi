@@ -30,7 +30,11 @@
         </label>
         <label>
           パスワード{% if user %}（変更する場合のみ）{% endif %}
-          <input type="password" name="password" {% if not user %}required{% endif %}>
+          <input type="password" name="password" {% if not user %}required{% endif %} data-password-toggle-target="user-password">
+        </label>
+        <label class="checkbox-row password-visibility">
+          <input type="checkbox" data-password-toggle="user-password">
+          入力したパスワードを表示する
         </label>
         <label>
           権限

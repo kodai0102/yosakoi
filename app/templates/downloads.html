@@ -13,18 +13,35 @@
   <div class="panel-body">
     <div class="table-wrap">
       <table>
-        <thead><tr><th>写真</th><th>アルバム</th><th>ダウンロード日時</th><th>操作</th></tr></thead>
+        <thead>
+          <tr>
+            {% if show_download_user %}<th>ユーザー</th>{% endif %}
+            <th>写真</th>
+            <th>形式</th>
+            <th>アルバム</th>
+            <th>ダウンロード日時</th>
+            <th>操作</th>
+          </tr>
+        </thead>
         <tbody>
           {% for photo in photos %}
             <tr>
-              <td>{{ photo.file_name }}</td>
+              {% if show_download_user %}<td>{{ photo.downloaded_by }}</td>{% endif %}
+              <td>{{ photo.downloaded_filename or photo.file_name }}</td>
+              <td>{{ photo.file_type }}</td>
               <td>ID: {{ photo.album_id }}</td>
               <td>{{ photo.downloaded_at_label }}</td>
-              <td><a class="button button-secondary" href="/photos/{{ photo.id }}">表示</a></td>
+              <td>
+                {% if photo.id %}
+                  <a class="button button-secondary" href="/photos/{{ photo.id }}">表示</a>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
             </tr>
           {% endfor %}
           {% if not photos %}
-            <tr><td colspan="4">ダウンロード履歴はまだありません。</td></tr>
+            <tr><td colspan="{{ 6 if show_download_user else 5 }}">ダウンロード履歴はまだありません。</td></tr>
           {% endif %}
         </tbody>
       </table>
