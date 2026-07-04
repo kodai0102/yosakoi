@@ -63,6 +63,21 @@ async def set_photo_tags(db: AsyncSession, photo_id: UUID, tag_names: list[str])
     await db.commit()
 
 
+async def add_tags_to_photos(db: AsyncSession, photo_ids: list[UUID], tag_names: list[str]) -> None:
+    if not photo_ids or not tag_names:
+        return
+
+    for photo_id in photo_ids:
+        existing_names = set(await get_photo_tag_names(db, photo_id))
+        for name in tag_names:
+            if name in existing_names:
+                continue
+            tag = await get_or_create_tag(db, name)
+            db.add(PhotoDancerTag(photo_id=photo_id, dancer_tag_id=tag.id))
+            existing_names.add(name)
+    await db.commit()
+
+
 async def get_photo_tag_names(db: AsyncSession, photo_id: UUID) -> list[str]:
     result = await db.execute(
         select(DancerTag.name)

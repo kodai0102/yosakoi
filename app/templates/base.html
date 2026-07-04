@@ -816,6 +816,15 @@
         gap: 8px;
       }
 
+      .photo-select {
+        align-items: center;
+        color: var(--muted);
+        display: inline-flex;
+        font-size: 12px;
+        font-weight: 700;
+        gap: 6px;
+      }
+
       .photo-admin-meta {
         color: var(--muted);
         display: grid;
@@ -1169,6 +1178,19 @@
               const input = document.querySelector(`[data-password-toggle-target="${targetName}"]`);
               if (input instanceof HTMLInputElement) {
                 input.type = toggle.checked ? "text" : "password";
+              }
+            });
+          });
+        })();
+
+        (() => {
+          const bulkToggle = document.querySelector("[data-bulk-photo-select]");
+          if (!(bulkToggle instanceof HTMLInputElement)) return;
+          const photoChecks = Array.from(document.querySelectorAll('input[name="photo_ids"]'));
+          bulkToggle.addEventListener("change", () => {
+            photoChecks.forEach((input) => {
+              if (input instanceof HTMLInputElement) {
+                input.checked = bulkToggle.checked;
               }
             });
           });

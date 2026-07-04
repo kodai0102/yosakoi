@@ -38,9 +38,23 @@
       <span class="meta">{{ photos | length }}枚</span>
     </div>
     {% if photos %}
+    <form id="bulk-tags-form" class="toolbar" method="post" action="/admin/albums/{{ album.id }}/photos/tags/bulk">
+      <div class="nav-links">
+        <label class="photo-select">
+          <input type="checkbox" data-bulk-photo-select>
+          表示中の写真を全選択
+        </label>
+        <input name="tags" aria-label="一括追加タグ" placeholder="選択写真に追加するタグをカンマ区切りで入力">
+      </div>
+      <button class="button-secondary" type="submit">選択写真にタグ追加</button>
+    </form>
     <div class="photo-grid photo-admin-grid">
       {% for photo in photos %}
         <div class="photo-admin-item">
+          <label class="photo-select">
+            <input type="checkbox" name="photo_ids" value="{{ photo.id }}" form="bulk-tags-form">
+            選択
+          </label>
           <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.file_name }}">
             <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
             <span class="photo-favorite">表示</span>

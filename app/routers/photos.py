@@ -26,7 +26,13 @@ from app.services.photos import (
     logical_delete_photo,
     serialize_photo,
 )
-from app.services.tags import get_photo_tag_names, get_photo_tags_map, parse_tag_names, set_photo_tags
+from app.services.tags import (
+    add_tags_to_photos,
+    get_photo_tag_names,
+    get_photo_tags_map,
+    parse_tag_names,
+    set_photo_tags,
+)
 from app.services.storage import (
     guess_media_type,
     media_path,
@@ -267,6 +273,32 @@ async def update_photo_tags_form(
     await set_photo_tags(db, photo_id, parse_tag_names(tags))
     return RedirectResponse(
         url=f"/admin/albums/{photo.album_id}/photos",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/admin/albums/{album_id}/photos/tags/bulk", response_class=HTMLResponse)
+async def bulk_update_photo_tags_form(
+    album_id: int,
+    photo_ids: list[UUID] = Form(default=[]),
+    tags: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(require_admin),
+) -> RedirectResponse:
+    await get_album_or_404(db, album_id)
+    tag_names = parse_tag_names(tags)
+    if photo_ids and tag_names:
+        result = await db.execute(
+            select(Photo.id).where(
+                Photo.album_id == album_id,
+                Photo.is_deleted.is_(False),
+                Photo.id.in_(photo_ids),
+            )
+        )
+        valid_photo_ids = list(result.scalars().all())
+        await add_tags_to_photos(db, valid_photo_ids, tag_names)
+    return RedirectResponse(
+        url=f"/admin/albums/{album_id}/photos",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
