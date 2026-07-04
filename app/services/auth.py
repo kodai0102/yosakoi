@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import jwt
 from sqlalchemy import select
@@ -10,6 +11,7 @@ from app.services.passwords import verify_password
 
 
 settings = get_settings()
+APP_TIMEZONE = ZoneInfo("Asia/Tokyo")
 
 
 def now_utc() -> datetime:
@@ -18,8 +20,12 @@ def now_utc() -> datetime:
 
 def normalize_datetime(value: datetime) -> datetime:
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
+        return value.replace(tzinfo=APP_TIMEZONE)
     return value
+
+
+def display_datetime(value: datetime) -> datetime:
+    return normalize_datetime(value).astimezone(APP_TIMEZONE)
 
 
 def is_user_available(user: DeptUser, at: datetime | None = None) -> bool:

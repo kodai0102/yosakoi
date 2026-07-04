@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -14,7 +14,7 @@ from app.dependencies.auth import require_admin
 from app.models.dept_user import DeptUser
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.activity_logs import record_activity
-from app.services.auth import normalize_datetime
+from app.services.auth import APP_TIMEZONE, display_datetime, normalize_datetime
 from app.services.passwords import hash_password
 
 router = APIRouter(tags=["admin-users"])
@@ -24,7 +24,14 @@ templates = Jinja2Templates(directory="app/templates")
 def parse_csv_date(value: str, end_of_day: bool = False) -> datetime:
     parsed = date.fromisoformat(value)
     parsed_time = time.max if end_of_day else time.min
-    return datetime.combine(parsed, parsed_time, tzinfo=timezone.utc)
+    return datetime.combine(parsed, parsed_time, tzinfo=APP_TIMEZONE)
+
+
+def datetime_local(value: datetime) -> str:
+    return display_datetime(value).strftime("%Y-%m-%dT%H:%M")
+
+
+templates.env.filters["datetime_local"] = datetime_local
 
 
 def ensure_valid_period(valid_from: datetime, valid_to: datetime) -> None:

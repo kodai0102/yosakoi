@@ -47,11 +47,11 @@
         </label>
         <label>
           利用開始日時
-          <input type="datetime-local" name="valid_from" value="{{ values.valid_from if values else (user.valid_from.strftime('%Y-%m-%dT%H:%M') if user else '') }}" required>
+          <input type="datetime-local" name="valid_from" value="{{ values.valid_from if values else (user.valid_from|datetime_local if user else '') }}" required>
         </label>
         <label>
           利用終了日時
-          <input type="datetime-local" name="valid_to" value="{{ values.valid_to if values else (user.valid_to.strftime('%Y-%m-%dT%H:%M') if user else '') }}" required>
+          <input type="datetime-local" name="valid_to" value="{{ values.valid_to if values else (user.valid_to|datetime_local if user else '') }}" required>
         </label>
         <label class="checkbox-row">
           <input type="checkbox" name="is_active" value="true" {% if selected_active %}checked{% endif %}>
