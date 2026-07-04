@@ -24,12 +24,17 @@ from app.services.photos import (
     get_photo_or_404,
     list_album_photos,
     logical_delete_photo,
-    media_path,
     serialize_photo,
-    storage_root,
 )
 from app.services.tags import get_photo_tag_names, get_photo_tags_map, parse_tag_names, set_photo_tags
-from app.services.storage import guess_media_type, object_exists, read_object, uses_r2_storage
+from app.services.storage import (
+    guess_media_type,
+    media_path,
+    object_exists,
+    read_object,
+    storage_root,
+    uses_r2_storage,
+)
 
 router = APIRouter(tags=["photos"])
 templates = Jinja2Templates(directory="app/templates")
