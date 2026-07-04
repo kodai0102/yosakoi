@@ -80,18 +80,25 @@ def image_response(object_path: str, media_type: str | None = None) -> Response:
     )
 
 
+def photo_media_type(photo: Photo) -> str:
+    if photo.content_type and photo.content_type.startswith("image/"):
+        return photo.content_type
+    return guess_media_type(photo.file_name, guess_media_type(photo.original_path))
+
+
 def inline_image_response(photo: Photo) -> Response:
     image_file_type(photo)
+    media_type = photo_media_type(photo)
     if uses_r2_storage():
         response = image_response(
             photo.original_path,
-            media_type=photo.content_type,
+            media_type=media_type,
         )
     else:
         path = ensure_media_path(photo.original_path)
         response = FileResponse(
             path,
-            media_type=photo.content_type,
+            media_type=media_type,
         )
     response.headers["Content-Disposition"] = (
         f"inline; filename*=UTF-8''{quote(photo.file_name)}"

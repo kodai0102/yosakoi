@@ -24,6 +24,12 @@
     <div class="panel-body">
       <div class="toolbar">
         <span class="meta">{{ photo.content_type }}</span>
+        <a
+          class="button button-primary"
+          href="/photos/{{ photo.id }}/save-file"
+          target="_blank"
+          rel="noopener"
+        >画像を開いて保存</a>
         <a class="button button-secondary" href="/albums/{{ album.id }}">写真一覧へ</a>
       </div>
     </div>
