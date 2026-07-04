@@ -3,7 +3,7 @@ from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +29,7 @@ from app.services.photos import (
     storage_root,
 )
 from app.services.tags import get_photo_tag_names, get_photo_tags_map, parse_tag_names, set_photo_tags
+from app.services.storage import guess_media_type, object_exists, read_object, uses_r2_storage
 
 router = APIRouter(tags=["photos"])
 templates = Jinja2Templates(directory="app/templates")
@@ -60,17 +61,51 @@ def ensure_media_path(object_path: str) -> Path:
     return path
 
 
-def inline_image_response(photo: Photo) -> FileResponse:
-    image_file_type(photo)
-    path = ensure_media_path(photo.original_path)
-    response = FileResponse(
-        path,
-        media_type=photo.content_type,
+def image_response(object_path: str, media_type: str | None = None) -> Response:
+    payload, stored_media_type = read_object(object_path)
+    return Response(
+        payload,
+        media_type=guess_media_type(object_path, media_type or stored_media_type),
     )
+
+
+def inline_image_response(photo: Photo) -> Response:
+    image_file_type(photo)
+    if uses_r2_storage():
+        response = image_response(
+            photo.original_path,
+            media_type=photo.content_type,
+        )
+    else:
+        path = ensure_media_path(photo.original_path)
+        response = FileResponse(
+            path,
+            media_type=photo.content_type,
+        )
     response.headers["Content-Disposition"] = (
         f"inline; filename*=UTF-8''{quote(photo.file_name)}"
     )
     return response
+
+
+def ensure_media_object(object_path: str) -> None:
+    if uses_r2_storage():
+        if not object_exists(object_path):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="画像が存在しません")
+        return
+    ensure_media_path(object_path)
+
+
+@router.get("/media/{object_path:path}")
+async def media_file(
+    object_path: str,
+    current_user: DeptUser = Depends(get_current_user),
+) -> Response:
+    if uses_r2_storage():
+        return image_response(object_path)
+    path = ensure_media_path(object_path)
+    media_type = "image/webp" if path.suffix == ".webp" else None
+    return FileResponse(path, media_type=media_type)
 
 
 async def record_and_redirect_to_save(
@@ -85,7 +120,7 @@ async def record_and_redirect_to_save(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="写真が存在しません")
     await record_download_history(db, request, current_user, photo)
     await record_activity(db, request, "photo_download", user=current_user, target_id=str(photo_id))
-    ensure_media_path(photo.original_path)
+    ensure_media_object(photo.original_path)
     return RedirectResponse(url=f"/photos/{photo_id}/save", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -101,16 +136,6 @@ async def is_favorite_photo(db: AsyncSession, user: DeptUser, photo_id: UUID) ->
         .limit(1)
     )
     return result.scalar_one_or_none() == favorite_id
-
-
-@router.get("/media/{object_path:path}")
-async def media_file(
-    object_path: str,
-    current_user: DeptUser = Depends(get_current_user),
-) -> FileResponse:
-    path = ensure_media_path(object_path)
-    media_type = "image/webp" if path.suffix == ".webp" else None
-    return FileResponse(path, media_type=media_type)
 
 
 @router.get("/albums/{album_id}", response_class=HTMLResponse)

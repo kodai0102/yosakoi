@@ -1,6 +1,5 @@
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path
 from uuid import UUID
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -20,7 +19,8 @@ from app.models.download_history import DownloadHistory
 from app.models.photo import Photo
 from app.services.activity_logs import record_activity
 from app.services.downloads import record_download_history
-from app.services.photos import display_datetime, media_path, serialize_photo, storage_root
+from app.services.photos import display_datetime, serialize_photo
+from app.services.storage import object_exists, read_object
 from app.services.tags import list_photos_by_tag, list_tags_with_counts
 
 router = APIRouter(tags=["ui"])
@@ -120,12 +120,11 @@ def zip_entry_name(index: int, photo: Photo, used_names: set[str]) -> str:
     return candidate
 
 
-def ensure_download_path(photo: Photo) -> Path | None:
-    root = storage_root().resolve()
-    path = media_path(photo.original_path).resolve()
-    if root not in path.parents or not path.exists() or not path.is_file():
+def download_payload(photo: Photo) -> bytes | None:
+    if not object_exists(photo.original_path):
         return None
-    return path
+    payload, _ = read_object(photo.original_path)
+    return payload
 
 
 def operation_label(action: str) -> str:
@@ -390,10 +389,10 @@ async def download_favorites(
     downloaded_photo_ids = []
     with ZipFile(archive, "w", compression=ZIP_DEFLATED) as zip_file:
         for index, photo in enumerate(photos, start=1):
-            path = ensure_download_path(photo)
-            if path is None:
+            payload = download_payload(photo)
+            if payload is None:
                 continue
-            zip_file.write(path, arcname=zip_entry_name(index, photo, used_names))
+            zip_file.writestr(zip_entry_name(index, photo, used_names), payload)
             downloaded_photo_ids.append(str(photo.id))
             await record_download_history(db, request, current_user, photo)
 

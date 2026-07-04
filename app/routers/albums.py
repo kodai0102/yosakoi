@@ -21,7 +21,7 @@ from app.services.albums import (
     now_utc,
     serialize_album,
 )
-from app.services.photos import make_thumbnail, open_image, save_bytes, validate_upload
+from app.services.photos import make_thumbnail, open_image, save_image_bytes, validate_upload
 
 router = APIRouter(tags=["albums"])
 templates = Jinja2Templates(directory="app/templates")
@@ -98,7 +98,7 @@ async def save_album_thumbnail(file: UploadFile | None) -> str | None:
     validate_upload(file, payload)
     image = open_image(payload)
     object_key = f"album-thumbnails/{uuid4()}.webp"
-    save_bytes(object_key, make_thumbnail(image))
+    save_image_bytes(object_key, make_thumbnail(image), "image/webp")
     return object_key
 
 

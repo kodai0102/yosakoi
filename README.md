@@ -202,6 +202,29 @@ docker compose -f docker-compose.prod.yml down -v
 
 EC2 運用では、この2つをバックアップ対象にしてください。
 
+### Cloudflare R2 を使う場合
+
+画像保存先をCloudflare R2にする場合は、Cloudflare側で以下を作成します。
+
+- R2バケット
+- R2 Account API Token
+- Access Key ID
+- Secret Access Key
+
+`.env` では以下を設定します。
+
+```env
+STORAGE_BACKEND=r2
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET=yosakoi-photos-prod
+R2_ENDPOINT_URL=
+```
+
+`R2_ENDPOINT_URL` は空欄のままで構いません。アプリ側で `R2_ACCOUNT_ID` からR2のS3互換APIエンドポイントを組み立てます。
+既存のローカル保存画像は自動ではR2へ移行されません。R2設定後にアップロードした画像からR2へ保存されます。
+
 ## EC2 デプロイ手順
 
 1. EC2 インスタンスを作成します。

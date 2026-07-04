@@ -1,6 +1,5 @@
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
@@ -9,9 +8,9 @@ from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
 from app.models.album import Album
 from app.models.photo import Photo
+from app.services.storage import media_path, save_object, storage_root
 
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg": ".jpg",
@@ -25,14 +24,6 @@ JST = ZoneInfo("Asia/Tokyo")
 
 def now_jst() -> datetime:
     return datetime.now(JST)
-
-
-def storage_root() -> Path:
-    return Path(get_settings().local_storage_root)
-
-
-def media_path(object_key: str) -> Path:
-    return storage_root() / object_key
 
 
 def display_datetime(value: datetime | None) -> str:
@@ -112,9 +103,11 @@ def object_keys(album_id: int, photo_id: UUID, extension: str) -> tuple[str, str
 
 
 def save_bytes(object_key: str, payload: bytes) -> None:
-    path = media_path(object_key)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(payload)
+    save_object(object_key, payload)
+
+
+def save_image_bytes(object_key: str, payload: bytes, content_type: str) -> None:
+    save_object(object_key, payload, content_type)
 
 
 def make_thumbnail(image: Image.Image) -> bytes:
@@ -147,8 +140,8 @@ async def create_photo(db: AsyncSession, album: Album, file: UploadFile) -> Phot
     image = open_image(payload)
     photo_id = uuid4()
     original_key, thumbnail_key = object_keys(album.id, photo_id, extension)
-    save_bytes(original_key, payload)
-    save_bytes(thumbnail_key, make_thumbnail(image))
+    save_image_bytes(original_key, payload, file.content_type or "application/octet-stream")
+    save_image_bytes(thumbnail_key, make_thumbnail(image), "image/webp")
 
     photo = Photo(
         id=photo_id,
