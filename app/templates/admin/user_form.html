@@ -3,6 +3,8 @@
 {% block page_title %}{{ "ユーザー編集" if user else "ユーザー作成" }}{% endblock %}
 
 {% block content %}
+{% set selected_role = values.role if values else (user.role if user else "member") %}
+{% set selected_active = values.is_active if values else (user.is_active if user else true) %}
 <div class="page-header">
   <div>
     <h1>{{ "ユーザー編集" if user else "ユーザー作成" }}</h1>
@@ -21,12 +23,12 @@
         {% if not user %}
           <label>
             ログインID
-            <input type="text" name="login_id" required>
+            <input type="text" name="login_id" value="{{ values.login_id if values else '' }}" required>
           </label>
         {% endif %}
         <label>
           表示名
-          <input type="text" name="display_name" value="{{ user.display_name if user else '' }}" required>
+          <input type="text" name="display_name" value="{{ values.display_name if values else (user.display_name if user else '') }}" required>
         </label>
         <label>
           パスワード{% if user %}（変更する場合のみ）{% endif %}
@@ -39,20 +41,20 @@
         <label>
           権限
           <select name="role" required>
-            <option value="member" {% if user and user.role == "member" %}selected{% endif %}>member</option>
-            <option value="admin" {% if user and user.role == "admin" %}selected{% endif %}>admin</option>
+            <option value="member" {% if selected_role == "member" %}selected{% endif %}>member</option>
+            <option value="admin" {% if selected_role == "admin" %}selected{% endif %}>admin</option>
           </select>
         </label>
         <label>
           利用開始日時
-          <input type="datetime-local" name="valid_from" value="{{ user.valid_from.strftime('%Y-%m-%dT%H:%M') if user else '' }}" required>
+          <input type="datetime-local" name="valid_from" value="{{ values.valid_from if values else (user.valid_from.strftime('%Y-%m-%dT%H:%M') if user else '') }}" required>
         </label>
         <label>
           利用終了日時
-          <input type="datetime-local" name="valid_to" value="{{ user.valid_to.strftime('%Y-%m-%dT%H:%M') if user else '' }}" required>
+          <input type="datetime-local" name="valid_to" value="{{ values.valid_to if values else (user.valid_to.strftime('%Y-%m-%dT%H:%M') if user else '') }}" required>
         </label>
         <label class="checkbox-row">
-          <input type="checkbox" name="is_active" value="true" {% if not user or user.is_active %}checked{% endif %}>
+          <input type="checkbox" name="is_active" value="true" {% if selected_active %}checked{% endif %}>
           有効
         </label>
       </div>

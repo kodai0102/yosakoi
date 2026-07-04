@@ -5,6 +5,7 @@ from datetime import date, datetime, time, timezone
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +33,62 @@ def ensure_valid_period(valid_from: datetime, valid_to: datetime) -> None:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="利用開始日時は利用終了日時以前にしてください",
         )
+
+
+def form_error_message(exc: ValidationError) -> str:
+    first_error = exc.errors()[0]
+    field = ".".join(str(item) for item in first_error.get("loc", []))
+    message = first_error.get("msg", "入力内容を確認してください")
+    if field == "password" and first_error.get("type") == "string_too_short":
+        return "パスワードは8文字以上で入力してください"
+    if field == "login_id":
+        return f"ログインID: {message}"
+    if field == "display_name":
+        return f"表示名: {message}"
+    if field == "role":
+        return "権限は admin または member を選択してください"
+    return message
+
+
+def user_form_values(
+    *,
+    login_id: str | None = None,
+    display_name: str | None = None,
+    role: str | None = None,
+    valid_from: datetime | None = None,
+    valid_to: datetime | None = None,
+    is_active: bool = True,
+) -> dict[str, object]:
+    return {
+        "login_id": login_id or "",
+        "display_name": display_name or "",
+        "role": role or "member",
+        "valid_from": valid_from.strftime("%Y-%m-%dT%H:%M") if valid_from else "",
+        "valid_to": valid_to.strftime("%Y-%m-%dT%H:%M") if valid_to else "",
+        "is_active": is_active,
+    }
+
+
+def render_user_form(
+    request: Request,
+    current_user: DeptUser,
+    *,
+    user: DeptUser | None,
+    error: str | None,
+    values: dict[str, object] | None = None,
+    response_status: int = status.HTTP_400_BAD_REQUEST,
+) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "admin/user_form.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "user": user,
+            "error": error,
+            "values": values,
+        },
+        status_code=response_status,
+    )
 
 
 async def find_user_by_login_id(db: AsyncSession, login_id: str) -> DeptUser | None:
@@ -63,9 +120,13 @@ async def new_user_page(
     request: Request,
     current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
-    return templates.TemplateResponse(
-        "admin/user_form.html",
-        {"request": request, "current_user": current_user, "user": None, "error": None},
+    return render_user_form(
+        request,
+        current_user,
+        user=None,
+        error=None,
+        values=None,
+        response_status=status.HTTP_200_OK,
     )
 
 
@@ -82,16 +143,42 @@ async def create_user_form(
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ):
-    payload = UserCreate(
+    values = user_form_values(
         login_id=login_id,
         display_name=display_name,
-        password=password,
         role=role,
         valid_from=valid_from,
         valid_to=valid_to,
         is_active=is_active,
     )
-    await create_user(db, request, payload, current_user)
+    try:
+        payload = UserCreate(
+            login_id=login_id,
+            display_name=display_name,
+            password=password,
+            role=role,
+            valid_from=valid_from,
+            valid_to=valid_to,
+            is_active=is_active,
+        )
+        await create_user(db, request, payload, current_user)
+    except ValidationError as exc:
+        return render_user_form(
+            request,
+            current_user,
+            user=None,
+            error=form_error_message(exc),
+            values=values,
+        )
+    except HTTPException as exc:
+        return render_user_form(
+            request,
+            current_user,
+            user=None,
+            error=str(exc.detail),
+            values=values,
+            response_status=exc.status_code,
+        )
     return RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -105,9 +192,13 @@ async def edit_user_page(
     user = await find_user_by_no(db, user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが存在しません")
-    return templates.TemplateResponse(
-        "admin/user_form.html",
-        {"request": request, "current_user": current_user, "user": user, "error": None},
+    return render_user_form(
+        request,
+        current_user,
+        user=user,
+        error=None,
+        values=None,
+        response_status=status.HTTP_200_OK,
     )
 
 
@@ -124,15 +215,44 @@ async def update_user_form(
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(require_admin),
 ):
-    payload = UserUpdate(
+    user = await find_user_by_no(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが存在しません")
+
+    values = user_form_values(
         display_name=display_name,
-        password=password or None,
         role=role,
         valid_from=valid_from,
         valid_to=valid_to,
         is_active=is_active,
     )
-    await update_user(db, request, user_id, payload, current_user)
+    try:
+        payload = UserUpdate(
+            display_name=display_name,
+            password=password or None,
+            role=role,
+            valid_from=valid_from,
+            valid_to=valid_to,
+            is_active=is_active,
+        )
+        await update_user(db, request, user_id, payload, current_user)
+    except ValidationError as exc:
+        return render_user_form(
+            request,
+            current_user,
+            user=user,
+            error=form_error_message(exc),
+            values=values,
+        )
+    except HTTPException as exc:
+        return render_user_form(
+            request,
+            current_user,
+            user=user,
+            error=str(exc.detail),
+            values=values,
+            response_status=exc.status_code,
+        )
     return RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
 
 
