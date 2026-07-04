@@ -100,3 +100,17 @@ def object_exists(object_key: str) -> bool:
     root = storage_root().resolve()
     path = media_path(object_key).resolve()
     return root in path.parents and path.exists() and path.is_file()
+
+
+def delete_object(object_key: str | None) -> None:
+    if not object_key:
+        return
+
+    if uses_r2_storage():
+        r2_client().delete_object(Bucket=get_settings().r2_bucket, Key=object_key)
+        return
+
+    root = storage_root().resolve()
+    path = media_path(object_key).resolve()
+    if root in path.parents and path.exists() and path.is_file():
+        path.unlink()

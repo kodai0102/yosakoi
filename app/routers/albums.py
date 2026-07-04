@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.dependencies.auth import get_current_user, require_admin
 from app.models.album import Album
 from app.models.dept_user import DeptUser
+from app.models.photo import Photo
 from app.schemas.album import AlbumCreate, AlbumRead, AlbumUpdate
 from app.services.albums import (
     display_datetime,
@@ -22,6 +23,7 @@ from app.services.albums import (
     serialize_album,
 )
 from app.services.photos import make_thumbnail, open_image, save_image_bytes, validate_upload
+from app.services.storage import delete_object
 
 router = APIRouter(tags=["albums"])
 templates = Jinja2Templates(directory="app/templates")
@@ -456,5 +458,10 @@ async def update_album(db: AsyncSession, album_id: int, payload: AlbumUpdate) ->
 
 async def delete_album(db: AsyncSession, album_id: int) -> None:
     album = await get_album_or_404(db, album_id)
+    result = await db.execute(select(Photo).where(Photo.album_id == album_id))
+    for photo in result.scalars().all():
+        delete_object(photo.original_path)
+        delete_object(photo.thumbnail_path)
+    delete_object(album.thumbnail_path)
     await db.delete(album)
     await db.commit()

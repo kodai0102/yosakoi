@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.album import Album
 from app.models.photo import Photo
-from app.services.storage import media_path, save_object, storage_root
+from app.services.storage import delete_object, save_object
 
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg": ".jpg",
@@ -161,6 +161,8 @@ async def create_photo(db: AsyncSession, album: Album, file: UploadFile) -> Phot
 
 async def logical_delete_photo(db: AsyncSession, photo_id: UUID) -> Photo:
     photo = await get_photo_or_404(db, photo_id)
+    delete_object(photo.original_path)
+    delete_object(photo.thumbnail_path)
     photo.is_deleted = True
     photo.deleted_at = now_jst()
     await db.commit()
