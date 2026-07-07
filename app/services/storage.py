@@ -114,3 +114,25 @@ def delete_object(object_key: str | None) -> None:
     path = media_path(object_key).resolve()
     if root in path.parents and path.exists() and path.is_file():
         path.unlink()
+
+
+def presigned_object_url(
+    object_key: str,
+    expires_in: int = 600,
+    content_type: str | None = None,
+) -> str:
+    if not uses_r2_storage():
+        raise RuntimeError("Presigned URLはR2ストレージでのみ利用できます")
+
+    params = {
+        "Bucket": get_settings().r2_bucket,
+        "Key": object_key,
+    }
+    if content_type:
+        params["ResponseContentType"] = content_type
+
+    return r2_client().generate_presigned_url(
+        "get_object",
+        Params=params,
+        ExpiresIn=expires_in,
+    )

@@ -15,7 +15,7 @@
   <div class="photo-save-frame">
     <img
       class="photo-save-image"
-      src="/photos/{{ photo.id }}/save-file"
+      src="{{ save_image_url }}"
       alt="{{ photo.file_name }}"
     >
   </div>
@@ -25,7 +25,7 @@
         <span class="meta">{{ photo.file_name }}</span>
         <a
           class="button button-secondary"
-          href="/photos/{{ photo.id }}/save-file"
+          href="{{ save_image_url }}"
           target="_blank"
           rel="noopener"
         >別画面で開く</a>

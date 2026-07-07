@@ -36,6 +36,7 @@ from app.services.storage import (
     guess_media_type,
     media_path,
     object_exists,
+    presigned_object_url,
     read_object,
     storage_root,
     uses_r2_storage,
@@ -100,6 +101,15 @@ def inline_image_response(photo: Photo) -> Response:
             media_type=media_type,
         )
     return response
+
+
+def photo_save_url(photo: Photo) -> str:
+    if uses_r2_storage():
+        return presigned_object_url(
+            photo.original_path,
+            content_type=photo_media_type(photo),
+        )
+    return f"/photos/{photo.id}/save-file"
 
 
 def ensure_media_object(object_path: str) -> None:
@@ -373,6 +383,7 @@ async def save_photo_page(
             "current_user": current_user,
             "album": serialize_album(album),
             "photo": serialize_photo(photo),
+            "save_image_url": photo_save_url(photo),
         },
     )
 
