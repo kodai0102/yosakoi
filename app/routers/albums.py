@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -135,6 +135,26 @@ def album_list_query(q: str | None = None, year: int | None = None):
     return query.order_by(Album.event_date.desc(), Album.id.desc())
 
 
+async def serialize_albums_with_counts(db: AsyncSession, albums: list[Album]) -> list[dict[str, object]]:
+    if not albums:
+        return []
+
+    album_ids = [album.id for album in albums]
+    result = await db.execute(
+        select(Photo.album_id, func.count(Photo.id))
+        .where(Photo.album_id.in_(album_ids), Photo.is_deleted.is_(False))
+        .group_by(Photo.album_id)
+    )
+    counts = {album_id: int(count) for album_id, count in result.all()}
+
+    rows = []
+    for album in albums:
+        item = serialize_album(album)
+        item["count"] = counts.get(album.id, 0)
+        rows.append(item)
+    return rows
+
+
 def public_album_list_query(q: str | None = None, year: int | None = None):
     current = now_utc()
     return album_list_query(q, year).where(
@@ -152,7 +172,7 @@ async def albums_page(
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     result = await db.execute(public_album_list_query(q, parse_optional_int(year)))
-    albums = [serialize_album(album) for album in result.scalars().all()]
+    albums = await serialize_albums_with_counts(db, list(result.scalars().all()))
     return templates.TemplateResponse(
         "home.html",
         {
@@ -198,7 +218,7 @@ async def admin_albums_page(
     current_user: DeptUser = Depends(require_admin),
 ) -> HTMLResponse:
     result = await db.execute(album_list_query(q, parse_optional_int(year)))
-    albums = [serialize_album(album) for album in result.scalars().all()]
+    albums = await serialize_albums_with_counts(db, list(result.scalars().all()))
     return templates.TemplateResponse(
         "admin/albums.html",
         {
