@@ -23,6 +23,8 @@ from app.services.photos import (
     get_photo_or_404,
     list_album_photos,
     logical_delete_photo,
+    make_save_jpeg,
+    save_jpeg_key_from_original,
     serialize_photo,
 )
 from app.services.tags import (
@@ -38,6 +40,7 @@ from app.services.storage import (
     object_exists,
     presigned_object_url,
     read_object,
+    save_object,
     storage_root,
     uses_r2_storage,
 )
@@ -105,11 +108,22 @@ def inline_image_response(photo: Photo) -> Response:
 
 def photo_save_url(photo: Photo) -> str:
     if uses_r2_storage():
+        save_key = ensure_save_jpeg_object(photo)
         return presigned_object_url(
-            photo.original_path,
-            content_type=photo_media_type(photo),
+            save_key,
+            content_type="image/jpeg",
         )
     return f"/photos/{photo.id}/save-file"
+
+
+def ensure_save_jpeg_object(photo: Photo) -> str:
+    save_key = save_jpeg_key_from_original(photo.original_path)
+    if object_exists(save_key):
+        return save_key
+
+    payload, _ = read_object(photo.original_path)
+    save_object(save_key, make_save_jpeg(payload), "image/jpeg")
+    return save_key
 
 
 def ensure_media_object(object_path: str) -> None:

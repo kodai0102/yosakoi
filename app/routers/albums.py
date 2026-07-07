@@ -22,7 +22,13 @@ from app.services.albums import (
     now_utc,
     serialize_album,
 )
-from app.services.photos import make_thumbnail, open_image, save_image_bytes, validate_upload
+from app.services.photos import (
+    make_thumbnail,
+    open_image,
+    save_image_bytes,
+    save_jpeg_key_from_original,
+    validate_upload,
+)
 from app.services.storage import delete_object
 
 router = APIRouter(tags=["albums"])
@@ -462,6 +468,7 @@ async def delete_album(db: AsyncSession, album_id: int) -> None:
     for photo in result.scalars().all():
         delete_object(photo.original_path)
         delete_object(photo.thumbnail_path)
+        delete_object(save_jpeg_key_from_original(photo.original_path))
     delete_object(album.thumbnail_path)
     await db.delete(album)
     await db.commit()

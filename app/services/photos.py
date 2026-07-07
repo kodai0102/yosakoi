@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, UploadFile, status
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,7 @@ ALLOWED_CONTENT_TYPES = {
 }
 MAX_UPLOAD_BYTES = 30 * 1024 * 1024
 THUMBNAIL_SIZE = (640, 640)
+SAVE_JPEG_QUALITY = 95
 JST = ZoneInfo("Asia/Tokyo")
 
 
@@ -102,6 +103,11 @@ def object_keys(album_id: int, photo_id: UUID, extension: str) -> tuple[str, str
     return f"{prefix}/original{extension}", f"{prefix}/thumbnail.webp"
 
 
+def save_jpeg_key_from_original(original_path: str) -> str:
+    prefix = original_path.rsplit("/", 1)[0]
+    return f"{prefix}/save.jpg"
+
+
 def save_bytes(object_key: str, payload: bytes) -> None:
     save_object(object_key, payload)
 
@@ -115,6 +121,13 @@ def make_thumbnail(image: Image.Image) -> bytes:
     image.thumbnail(THUMBNAIL_SIZE)
     output = BytesIO()
     image.save(output, format="WEBP", quality=82)
+    return output.getvalue()
+
+
+def make_save_jpeg(payload: bytes) -> bytes:
+    image = ImageOps.exif_transpose(open_image(payload)).convert("RGB")
+    output = BytesIO()
+    image.save(output, format="JPEG", quality=SAVE_JPEG_QUALITY, optimize=True)
     return output.getvalue()
 
 
@@ -163,6 +176,7 @@ async def logical_delete_photo(db: AsyncSession, photo_id: UUID) -> Photo:
     photo = await get_photo_or_404(db, photo_id)
     delete_object(photo.original_path)
     delete_object(photo.thumbnail_path)
+    delete_object(save_jpeg_key_from_original(photo.original_path))
     photo.is_deleted = True
     photo.deleted_at = now_jst()
     await db.commit()
