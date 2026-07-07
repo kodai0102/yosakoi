@@ -6,7 +6,7 @@
 <div class="page-header">
   <div>
     <h1>写真を保存</h1>
-    <p class="page-description">{{ photo.file_name }}</p>
+    <p class="page-description">写真を長押しして「写真に保存」または「画像を保存」を選んでください。</p>
   </div>
   <a class="button button-secondary" href="/photos/{{ photo.id }}">写真詳細へ</a>
 </div>
@@ -17,21 +17,24 @@
       class="photo-save-image"
       src="/photos/{{ photo.id }}/save-file"
       alt="{{ photo.file_name }}"
-      draggable="false"
     >
   </div>
   <div class="panel">
     <div class="panel-body">
       <div class="toolbar">
-        <span class="meta">{{ photo.content_type }}</span>
+        <span class="meta">{{ photo.file_name }}</span>
         <a
-          class="button button-primary"
+          class="button button-secondary"
           href="/photos/{{ photo.id }}/save-file"
           target="_blank"
           rel="noopener"
-        >画像を開いて保存</a>
+        >別画面で開く</a>
         <a class="button button-secondary" href="/albums/{{ album.id }}">写真一覧へ</a>
       </div>
+      <p class="meta" style="margin-top: 12px;">
+        ブラウザやiPhoneの設定により、保存先にファイルやGoogle Driveが表示される場合があります。
+        うまく保存できない場合はSafariで開いて再度お試しください。
+      </p>
     </div>
   </div>
 </section>

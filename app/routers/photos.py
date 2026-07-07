@@ -1,5 +1,4 @@
 from pathlib import Path
-from urllib.parse import quote
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
@@ -100,9 +99,6 @@ def inline_image_response(photo: Photo) -> Response:
             path,
             media_type=media_type,
         )
-    response.headers["Content-Disposition"] = (
-        f"inline; filename*=UTF-8''{quote(photo.file_name)}"
-    )
     return response
 
 
