@@ -250,6 +250,50 @@
         font-size: 12px;
       }
 
+      .mobile-account {
+        align-items: center;
+        display: none;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .mobile-account-text {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+        text-align: right;
+      }
+
+      .mobile-account-name {
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mobile-account-role {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .mobile-logout-button {
+        align-items: center;
+        background: #fff;
+        border: 1px solid #ffd1d1;
+        border-radius: 999px;
+        color: var(--danger);
+        display: flex;
+        font-size: 12px;
+        font-weight: 800;
+        gap: 4px;
+        min-height: 36px;
+        padding: 0 10px;
+        white-space: nowrap;
+      }
+
       .content {
         padding: 32px;
       }
@@ -991,6 +1035,13 @@
           min-width: 0;
         }
         .avatar { display: none; }
+        .mobile-account {
+          display: flex;
+          max-width: 40vw;
+        }
+        .mobile-account-text {
+          max-width: 22vw;
+        }
         .bottom-nav {
           background: rgba(255, 255, 255, 0.94);
           border-top: 1px solid var(--line);
@@ -1053,7 +1104,17 @@
         }
         .page-title {
           font-size: 12px;
-          max-width: 30vw;
+          max-width: 24vw;
+        }
+        .mobile-account {
+          max-width: 44vw;
+        }
+        .mobile-account-text {
+          max-width: 20vw;
+        }
+        .mobile-logout-button {
+          font-size: 11px;
+          padding: 0 8px;
         }
       }
     </style>
@@ -1139,6 +1200,18 @@
                   <span class="avatar-name">{{ current_user.display_name }}</span>
                   <span class="avatar-role">{{ "管理者" if current_user.role == "admin" else "メンバー" }}</span>
                 </span>
+              </div>
+              <div class="mobile-account" aria-label="ログイン中のユーザー">
+                <span class="mobile-account-text">
+                  <span class="mobile-account-name">{{ current_user.display_name }}</span>
+                  <span class="mobile-account-role">{{ "管理者" if current_user.role == "admin" else "メンバー" }}</span>
+                </span>
+                <form method="post" action="/logout">
+                  <button class="mobile-logout-button" type="submit">
+                    <span>↪</span>
+                    <span>ログアウト</span>
+                  </button>
+                </form>
               </div>
             </div>
           </header>
