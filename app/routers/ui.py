@@ -426,6 +426,9 @@ async def tag_search_page(
     tags = await list_tags_with_counts(db, q)
     selected_tag = next((tag for tag in tags if tag["id"] == tag_id), None)
     photos = await list_photos_by_tag(db, tag_id) if tag_id is not None else []
+    favorite_ids = set(await favorite_photo_ids(db, current_user))
+    for photo in photos:
+        photo["is_favorite"] = UUID(str(photo["id"])) in favorite_ids
     return templates.TemplateResponse(
         "tag_search.html",
         {

@@ -37,9 +37,21 @@
 
 <div class="photo-grid">
   {% for photo in photos %}
-    <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.file_name }}">
-      <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
-    </a>
+    <div class="photo-card">
+      <a class="photo-tile" href="/photos/{{ photo.id }}" aria-label="{{ photo.file_name }}">
+        <img src="{{ photo.thumbnail_url }}" alt="{{ photo.file_name }}">
+      </a>
+      <form method="post" action="/photos/{{ photo.id }}/favorite">
+        <input type="hidden" name="redirect_to" value="/tags{% if selected_tag %}?tag_id={{ selected_tag.id }}{% elif query %}?q={{ query }}{% endif %}">
+        <button
+          class="photo-favorite-button {% if photo.is_favorite %}is-active{% endif %}"
+          type="submit"
+          aria-label="{{ 'お気に入り解除' if photo.is_favorite else 'お気に入りに追加' }}"
+        >
+          {{ '♥' if photo.is_favorite else '♡' }}
+        </button>
+      </form>
+    </div>
   {% endfor %}
 </div>
 {% if selected_tag and not photos %}

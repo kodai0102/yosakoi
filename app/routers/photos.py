@@ -54,6 +54,49 @@ def serialize_photos(photos: list[object]) -> list[dict[str, object]]:
     return [serialize_photo(photo) for photo in photos]
 
 
+async def favorite_photo_id_set(db: AsyncSession, user: DeptUser, photo_ids: list[UUID]) -> set[UUID]:
+    if not photo_ids:
+        return set()
+
+    favorite_values = [str(photo_id) for photo_id in photo_ids]
+    target_values = favorite_values + [f"{UNFAVORITE_PREFIX}{photo_id}" for photo_id in favorite_values]
+    result = await db.execute(
+        select(AccessLog.favorite)
+        .where(
+            AccessLog.user_id == user.login_id,
+            AccessLog.favorite.in_(target_values),
+        )
+        .order_by(AccessLog.rireki_no.desc())
+    )
+    states: dict[UUID, bool] = {}
+    for value in result.scalars().all():
+        if not value:
+            continue
+        is_removed = value.startswith(UNFAVORITE_PREFIX)
+        raw_id = value.removeprefix(UNFAVORITE_PREFIX)
+        try:
+            photo_id = UUID(raw_id)
+        except ValueError:
+            continue
+        if photo_id not in states:
+            states[photo_id] = not is_removed
+    return {photo_id for photo_id, is_active in states.items() if is_active}
+
+
+async def serialize_photos_with_favorites(
+    db: AsyncSession,
+    photos: list[Photo],
+    user: DeptUser,
+) -> list[dict[str, object]]:
+    favorite_ids = await favorite_photo_id_set(db, user, [photo.id for photo in photos])
+    rows = []
+    for photo in photos:
+        item = serialize_photo(photo)
+        item["is_favorite"] = photo.id in favorite_ids
+        rows.append(item)
+    return rows
+
+
 async def serialize_photos_with_tags(db: AsyncSession, photos: list[object]) -> list[dict[str, object]]:
     tag_map = await get_photo_tags_map(db, [photo.id for photo in photos])
     rows = []
@@ -195,7 +238,7 @@ async def album_photos_page(
             "request": request,
             "current_user": current_user,
             "album": album_data,
-            "photos": serialize_photos(photos),
+            "photos": await serialize_photos_with_favorites(db, photos, current_user),
         },
     )
 
