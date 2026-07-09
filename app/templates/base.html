@@ -156,10 +156,10 @@
         border-bottom: 1px solid var(--line);
         backdrop-filter: blur(16px);
         display: flex;
-        gap: 16px;
-        height: 78px;
+        gap: 20px;
+        height: 88px;
         justify-content: space-between;
-        padding: 0 32px;
+        padding: 0 36px;
         position: sticky;
         top: 0;
         z-index: 2;
@@ -200,6 +200,15 @@
 
       .back-button.is-hidden {
         display: none;
+      }
+
+      .topbar-logo {
+        border-radius: 10px;
+        display: block;
+        flex: 0 0 auto;
+        height: 36px;
+        object-fit: cover;
+        width: 36px;
       }
 
       .menu-button {
@@ -1067,6 +1076,9 @@
         .menu-button {
           display: none;
         }
+        .topbar-logo {
+          display: none;
+        }
         .mobile-brand {
           display: flex;
           flex: 1 1 auto;
@@ -1283,6 +1295,7 @@
                 <span class="back-icon">‹</span>
                 <span class="back-label">戻る</span>
               </button>
+              <img class="topbar-logo" src="/static/images/toki-logo.jpeg" alt="トキ">
               <a class="mobile-brand" href="/">
                 <img class="brand-logo" src="/static/images/toki-logo.jpeg" alt="トキ">
                 <span class="mobile-brand-text">
