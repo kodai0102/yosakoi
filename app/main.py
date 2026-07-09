@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 
 from app.exception_handlers import http_exception_handler
 from app.middleware.auth_period import auth_period_middleware
@@ -14,6 +15,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="YOSAKOI PHOTO ARCHIVE")
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.middleware("http")(auth_period_middleware)
+    app.mount("/static", StaticFiles(directory="app/static"), name="static")
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(admin_users_router)

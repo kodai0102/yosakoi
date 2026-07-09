@@ -26,7 +26,7 @@ LOGOUT_PATHS = {
 
 
 def is_public_path(path: str) -> bool:
-    return path in PUBLIC_PATHS or path.startswith("/docs/")
+    return path in PUBLIC_PATHS or path.startswith("/docs/") or path.startswith("/static/")
 
 
 async def auth_period_middleware(

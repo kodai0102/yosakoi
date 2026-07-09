@@ -68,7 +68,7 @@ async def login_form(
 
     await record_activity(db, request, "login_success", user=user)
     response = RedirectResponse(
-        url="/admin/users" if user.role == "admin" else "/",
+        url="/albums",
         status_code=status.HTTP_303_SEE_OTHER,
     )
     set_auth_cookie(response, create_access_token(user))

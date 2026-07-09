@@ -65,6 +65,15 @@
         padding: 0 10px;
       }
 
+      .brand-logo {
+        border-radius: 14px;
+        display: block;
+        flex: 0 0 auto;
+        height: 44px;
+        object-fit: cover;
+        width: 44px;
+      }
+
       .brand-mark {
         align-items: center;
         background: linear-gradient(135deg, var(--brand), #8b5cf6);
@@ -189,6 +198,10 @@
         line-height: 1;
       }
 
+      .back-button.is-hidden {
+        display: none;
+      }
+
       .menu-button {
         background: transparent;
         border: 0;
@@ -210,6 +223,12 @@
         font-size: 14px;
         height: 28px;
         width: 28px;
+      }
+
+      .mobile-brand .brand-logo {
+        border-radius: 8px;
+        height: 32px;
+        width: 32px;
       }
 
       .mobile-brand-text {
@@ -602,7 +621,11 @@
         text-align: center;
       }
 
-      .login-brand .brand-mark { margin-bottom: 12px; }
+      .login-brand .brand-logo {
+        height: 68px;
+        margin-bottom: 14px;
+        width: 68px;
+      }
 
       .album-grid {
         display: grid;
@@ -1029,12 +1052,17 @@
         .layout { display: block; }
         .sidebar { display: none; }
         .topbar {
-          height: 70px;
-          padding: 0 14px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+          height: auto;
+          min-height: 76px;
+          padding: 12px 14px;
+          row-gap: 8px;
         }
         .topbar-left {
           flex: 1;
-          gap: 8px;
+          gap: 12px;
+          width: 100%;
         }
         .menu-button {
           display: none;
@@ -1060,6 +1088,8 @@
         }
         .topbar-actions {
           gap: 8px;
+          justify-content: flex-end;
+          width: 100%;
         }
         .content {
           padding: 18px 16px 88px;
@@ -1096,10 +1126,10 @@
         .avatar { display: none; }
         .mobile-account {
           display: flex;
-          max-width: 40vw;
+          max-width: 100%;
         }
         .mobile-account-text {
-          max-width: 22vw;
+          max-width: 46vw;
         }
         .bottom-nav {
           background: rgba(255, 255, 255, 0.94);
@@ -1154,7 +1184,10 @@
         .album-body { padding: 10px; }
         h1 { font-size: 26px; }
         .topbar {
-          padding: 0 12px;
+          padding: 10px 12px;
+        }
+        .topbar-left {
+          gap: 10px;
         }
         .mobile-brand .brand-title {
           font-size: 19px;
@@ -1167,10 +1200,10 @@
           max-width: 24vw;
         }
         .mobile-account {
-          max-width: 44vw;
+          max-width: 100%;
         }
         .mobile-account-text {
-          max-width: 20vw;
+          max-width: 44vw;
         }
         .mobile-logout-button {
           font-size: 11px;
@@ -1182,10 +1215,12 @@
   <body>
     {% if current_user is defined %}
       {% set current_path = request.url.path %}
+      {% set back_hidden_paths = ['/', '/albums', '/favorites', '/tags', '/downloads', '/admin', '/admin/users', '/admin/albums', '/admin/tags', '/admin/logs'] %}
+      {% set show_back_button = current_path not in back_hidden_paths %}
       <div class="layout">
         <aside class="sidebar">
           <a class="brand" href="/">
-            <span class="brand-mark">Y</span>
+            <img class="brand-logo" src="/static/images/toki-logo.jpeg" alt="トキ">
             <span>
               <span class="brand-title">トキ</span>
               <span class="brand-subtitle">チーム写真共有システム</span>
@@ -1244,12 +1279,12 @@
           <header class="topbar">
             <div class="topbar-left">
               <button class="menu-button" type="button" aria-label="menu">☰</button>
-              <button class="back-button" type="button" data-back-button data-back-fallback="/albums" aria-label="前の画面へ戻る">
+              <button class="back-button {% if not show_back_button %}is-hidden{% endif %}" type="button" data-back-button data-back-fallback="/albums" aria-label="前の画面へ戻る">
                 <span class="back-icon">‹</span>
                 <span class="back-label">戻る</span>
               </button>
               <a class="mobile-brand" href="/">
-                <span class="brand-mark">Y</span>
+                <img class="brand-logo" src="/static/images/toki-logo.jpeg" alt="トキ">
                 <span class="mobile-brand-text">
                   <span class="brand-title">トキ</span>
                   <span class="brand-subtitle">チーム写真共有システム</span>
