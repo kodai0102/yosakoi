@@ -1442,11 +1442,16 @@
                   method: "POST",
                   body: new FormData(form),
                   credentials: "same-origin",
+                  headers: {
+                    "Accept": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                  },
                 });
-                const responsePath = new URL(response.url).pathname;
-                if (!response.ok || responsePath === "/login") {
+                if (!response.ok) {
                   throw new Error("favorite update failed");
                 }
+                const data = await response.json();
+                renderFavoriteButton(button, Boolean(data.is_favorite));
                 if (shouldRemoveCard) {
                   favoriteCard.remove();
                 }

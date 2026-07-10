@@ -2,7 +2,7 @@ from pathlib import Path
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -380,12 +380,16 @@ async def favorite_photo_form(
     redirect_to: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
-) -> RedirectResponse:
+) -> Response:
     await get_photo_or_404(db, photo_id)
-    if await is_favorite_photo(db, current_user, photo_id):
+    was_favorite = await is_favorite_photo(db, current_user, photo_id)
+    if was_favorite:
         await record_activity(db, request, "favorite_remove", user=current_user, target_id=str(photo_id))
     else:
         await record_activity(db, request, "favorite", user=current_user, target_id=str(photo_id))
+    is_favorite = not was_favorite
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JSONResponse({"is_favorite": is_favorite})
     return RedirectResponse(
         url=redirect_to or f"/photos/{photo_id}",
         status_code=status.HTTP_303_SEE_OTHER,
