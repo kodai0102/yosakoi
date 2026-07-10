@@ -861,6 +861,13 @@
         color: #c2255c;
       }
 
+      .photo-favorite-button.is-pending,
+      .favorite-remove.is-pending,
+      .favorite-active.is-pending {
+        opacity: 0.72;
+        pointer-events: none;
+      }
+
       .favorite-active {
         background: #fff1f5;
         border-color: #f783ac;
@@ -1383,6 +1390,75 @@
               const input = document.querySelector(`[data-password-toggle-target="${targetName}"]`);
               if (input instanceof HTMLInputElement) {
                 input.type = toggle.checked ? "text" : "password";
+              }
+            });
+          });
+        })();
+
+        (() => {
+          const favoriteForms = Array.from(document.querySelectorAll('form[action^="/photos/"][action$="/favorite"]'));
+
+          const isActive = (button) =>
+            button.classList.contains("is-active") ||
+            button.classList.contains("favorite-active") ||
+            button.textContent.includes("♥");
+
+          const renderFavoriteButton = (button, active) => {
+            const isIconOnly =
+              button.classList.contains("photo-favorite-button") ||
+              button.classList.contains("favorite-remove");
+
+            button.classList.toggle("is-active", active);
+            button.classList.toggle("favorite-active", active && !isIconOnly);
+            button.setAttribute("aria-label", active ? "お気に入り解除" : "お気に入りに追加");
+
+            if (isIconOnly) {
+              button.textContent = active ? "♥" : "♡";
+              return;
+            }
+
+            button.textContent = active ? "♥ お気に入り解除" : "♡ お気に入り";
+          };
+
+          favoriteForms.forEach((form) => {
+            form.addEventListener("submit", async (event) => {
+              event.preventDefault();
+              const button = form.querySelector('button[type="submit"]');
+              if (!(button instanceof HTMLButtonElement) || button.disabled) return;
+
+              const wasActive = isActive(button);
+              const favoriteCard = form.closest(".favorite-card");
+              const shouldRemoveCard = Boolean(favoriteCard) && wasActive && window.location.pathname.startsWith("/favorites");
+
+              renderFavoriteButton(button, !wasActive);
+              button.disabled = true;
+              button.classList.add("is-pending");
+              if (shouldRemoveCard) {
+                favoriteCard.style.opacity = "0.45";
+              }
+
+              try {
+                const response = await fetch(form.action, {
+                  method: "POST",
+                  body: new FormData(form),
+                  credentials: "same-origin",
+                });
+                const responsePath = new URL(response.url).pathname;
+                if (!response.ok || responsePath === "/login") {
+                  throw new Error("favorite update failed");
+                }
+                if (shouldRemoveCard) {
+                  favoriteCard.remove();
+                }
+              } catch (error) {
+                renderFavoriteButton(button, wasActive);
+                if (shouldRemoveCard) {
+                  favoriteCard.style.opacity = "";
+                }
+                window.alert("お気に入りの更新に失敗しました。通信状態を確認してもう一度お試しください。");
+              } finally {
+                button.disabled = false;
+                button.classList.remove("is-pending");
               }
             });
           });
