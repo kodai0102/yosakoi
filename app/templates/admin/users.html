@@ -50,7 +50,21 @@
         </td>
         <td>{{ user.valid_from.strftime('%Y-%m-%d %H:%M') }}</td>
         <td>{{ user.valid_to.strftime('%Y-%m-%d %H:%M') }}</td>
-        <td><a class="button button-secondary" href="/admin/users/{{ user.id }}/edit">編集</a></td>
+        <td>
+          <div class="nav-links">
+            <a class="button button-secondary" href="/admin/users/{{ user.id }}/edit">編集</a>
+            {% if user.id != current_user.id %}
+              <form
+                method="post"
+                action="/admin/users/{{ user.id }}/delete"
+                data-confirm-delete
+                data-confirm-message="{{ user.display_name }}（{{ user.login_id }}）を削除しますか？このユーザーの操作ログ・ダウンロード履歴も削除されます。"
+              >
+                <button class="button-secondary" type="submit">削除</button>
+              </form>
+            {% endif %}
+          </div>
+        </td>
       </tr>
           {% endfor %}
         </tbody>

@@ -6,12 +6,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.dependencies.auth import require_admin
+from app.models.access_log import AccessLog
 from app.models.dept_user import DeptUser
+from app.models.download_history import DownloadHistory
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.services.activity_logs import record_activity
 from app.services.auth import APP_TIMEZONE, display_datetime, normalize_datetime
@@ -263,6 +265,17 @@ async def update_user_form(
     return RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.post("/admin/users/{user_id}/delete", response_class=HTMLResponse)
+async def delete_user_form(
+    request: Request,
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(require_admin),
+):
+    await delete_user(db, request, user_id, current_user)
+    return RedirectResponse(url="/admin/users", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.get("/admin/users/import", response_class=HTMLResponse)
 async def import_users_page(
     request: Request,
@@ -354,6 +367,17 @@ async def api_import_users(
 ) -> JSONResponse:
     result = await import_users_from_csv(db, request, file, initial_password, current_user)
     return JSONResponse(content={"success": True, "data": result})
+
+
+@router.delete("/api/admin/users/{user_id}")
+async def api_delete_user(
+    request: Request,
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: DeptUser = Depends(require_admin),
+) -> dict[str, object]:
+    deleted_user = await delete_user(db, request, user_id, current_user)
+    return {"success": True, "data": {"user": UserRead.model_validate(deleted_user)}}
 
 
 async def create_user(
@@ -463,6 +487,50 @@ async def set_user_active(
         target_id=str(user.id),
     )
     return user
+
+
+async def delete_user(
+    db: AsyncSession,
+    request: Request,
+    user_id: int,
+    current_user: DeptUser,
+) -> DeptUser:
+    user = await find_user_by_no(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="ユーザーが存在しません")
+    if user.user_id == current_user.user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="ログイン中の管理者は削除できません")
+    if user.role == "admin":
+        admin_count_result = await db.execute(
+            select(func.count()).select_from(DeptUser).where(DeptUser.role == "admin", DeptUser.is_active.is_(True))
+        )
+        if admin_count_result.scalar_one() <= 1:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="最後の有効な管理者は削除できません")
+
+    deleted_user = DeptUser(
+        user_no=user.user_no,
+        user_id=user.user_id,
+        user_name=user.user_name,
+        password=user.password,
+        role=user.role,
+        is_active=user.is_active,
+        create_date=user.create_date,
+        start_date=user.start_date,
+        end_date=user.end_date,
+    )
+    await record_activity(
+        db,
+        request,
+        "user_delete",
+        user=current_user,
+        target_type="user",
+        target_id=user.user_id,
+    )
+    await db.execute(delete(AccessLog).where(AccessLog.user_id == user.user_id))
+    await db.execute(delete(DownloadHistory).where(DownloadHistory.user_id == user.user_id))
+    await db.delete(user)
+    await db.commit()
+    return deleted_user
 
 
 async def import_users_from_csv(
