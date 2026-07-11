@@ -7,28 +7,28 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f7f7fb;
+        --bg: #faf7f2;
         --surface: #ffffff;
-        --surface-soft: #faf9ff;
-        --line: #e4e4ed;
-        --line-soft: #f0eff7;
-        --text: #1d2433;
-        --muted: #6b7280;
-        --brand: #5b35d5;
-        --brand-dark: #4320b0;
-        --brand-soft: #f0ebff;
-        --danger: #e03131;
-        --success-bg: #e8f7ef;
-        --success-text: #167043;
-        --muted-bg: #eef1f6;
-        --shadow: 0 14px 36px rgba(30, 24, 70, 0.08);
+        --surface-soft: #fff8f2;
+        --line: #ddd3c7;
+        --line-soft: #eee6dc;
+        --text: #2f2b27;
+        --muted: #6f6760;
+        --brand: #b63a2f;
+        --brand-dark: #8f2a23;
+        --brand-soft: #f7e7e3;
+        --danger: #b3261e;
+        --success-bg: #e8f4ec;
+        --success-text: #3f714c;
+        --muted-bg: #eee7dc;
+        --shadow: 0 14px 36px rgba(47, 43, 39, 0.10);
       }
 
       * { box-sizing: border-box; }
 
       body {
         background:
-          radial-gradient(circle at top left, rgba(91, 53, 213, 0.08), transparent 32rem),
+          radial-gradient(circle at top left, rgba(182, 58, 47, 0.08), transparent 32rem),
           var(--bg);
         color: var(--text);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -76,7 +76,7 @@
 
       .brand-mark {
         align-items: center;
-        background: linear-gradient(135deg, var(--brand), #8b5cf6);
+        background: linear-gradient(135deg, var(--brand), #d98670);
         border-radius: 14px;
         color: #fff;
         display: inline-flex;
@@ -118,7 +118,7 @@
       .nav-link {
         align-items: center;
         border-radius: 10px;
-        color: #374151;
+        color: #3f3934;
         display: flex;
         gap: 10px;
         font-size: 15px;
@@ -189,7 +189,7 @@
       }
 
       .back-button:hover {
-        border-color: #d4c9ff;
+        border-color: #e6b8b1;
         color: var(--brand-dark);
       }
 
@@ -272,7 +272,7 @@
 
       .avatar {
         align-items: center;
-        background: linear-gradient(135deg, #ebe7fb, #ffffff);
+        background: linear-gradient(135deg, #f7e7e3, #ffffff);
         border: 1px solid var(--line);
         border-radius: 999px;
         display: flex;
@@ -441,7 +441,7 @@
       .button,
       button {
         align-items: center;
-        background: linear-gradient(135deg, var(--brand), #6d45e6);
+        background: linear-gradient(135deg, var(--brand), #d65343);
         border: 1px solid var(--brand);
         border-radius: 9px;
         color: #ffffff;
@@ -458,13 +458,13 @@
 
       .button:hover,
       button:hover {
-        background: linear-gradient(135deg, var(--brand-dark), #5b35d5);
+        background: linear-gradient(135deg, var(--brand-dark), #a9342a);
         color: #fff;
       }
 
       .button-secondary {
         background: #ffffff;
-        border-color: #d8d2ef;
+        border-color: #e6b8b1;
         color: var(--brand-dark);
       }
 
@@ -497,13 +497,13 @@
       }
 
       th {
-        background: #fbfbfe;
+        background: #fffaf6;
         color: var(--muted);
         font-size: 12px;
         font-weight: 800;
       }
 
-      tbody tr:hover { background: #fbfaff; }
+      tbody tr:hover { background: #fff8f2; }
 
       .log-toolbar {
         align-items: flex-start;
@@ -614,7 +614,7 @@
       input:focus,
       select:focus {
         border-color: var(--brand);
-        box-shadow: 0 0 0 3px rgba(91, 53, 213, 0.12);
+        box-shadow: 0 0 0 3px rgba(182, 58, 47, 0.14);
         outline: none;
       }
 
@@ -683,15 +683,15 @@
         background: #fff;
         border: 1px solid var(--line);
         border-radius: 12px;
-        box-shadow: 0 10px 26px rgba(30, 24, 70, 0.07);
+        box-shadow: 0 10px 26px rgba(47, 43, 39, 0.08);
         overflow: hidden;
       }
 
       .album-thumb {
         aspect-ratio: 4 / 3;
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.35), rgba(255, 255, 255, 0.05)),
-          linear-gradient(45deg, #f06595, #ffd43b 42%, #40c057);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.26), rgba(255, 255, 255, 0.05)),
+          linear-gradient(45deg, #f2d0a4, #d65343 48%, #6f8f67);
         overflow: hidden;
         position: relative;
       }
@@ -705,14 +705,14 @@
 
       .album-card:nth-child(2) .album-thumb {
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.45), rgba(0, 0, 0, 0.05)),
-          linear-gradient(45deg, #212529, #e03131 48%, #f8f9fa);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.30), rgba(0, 0, 0, 0.05)),
+          linear-gradient(45deg, #2f2b27, #b63a2f 48%, #f4efe7);
       }
 
       .album-card:nth-child(3) .album-thumb {
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.25), rgba(255, 255, 255, 0.1)),
-          linear-gradient(45deg, #228be6, #f8f9fa 45%, #e03131);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.22), rgba(255, 255, 255, 0.1)),
+          linear-gradient(45deg, #4f6f8f, #fff8f2 45%, #b63a2f);
       }
 
       .album-status {
@@ -755,8 +755,8 @@
       .detail-image {
         aspect-ratio: 4 / 3;
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.2), transparent),
-          linear-gradient(45deg, #212529, #f06595 45%, #f8f0ff);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.18), transparent),
+          linear-gradient(45deg, #2f2b27, #d65343 45%, #fff8f2);
         border-radius: 12px;
         margin-bottom: 22px;
         overflow: hidden;
@@ -812,8 +812,8 @@
       .mini-thumb {
         aspect-ratio: 1 / 1;
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.22), rgba(255,255,255,0.08)),
-          linear-gradient(45deg, #111827, #ef476f 46%, #ffd166);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.20), rgba(255,255,255,0.08)),
+          linear-gradient(45deg, #2f2b27, #b63a2f 46%, #f2d0a4);
         border-radius: 8px;
         flex: 0 0 54px;
       }
@@ -831,10 +831,10 @@
       .photo-tile {
         aspect-ratio: 1 / 1;
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.24), rgba(255,255,255,0.08)),
-          linear-gradient(45deg, #111827, #ef476f 46%, #ffd166);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.20), rgba(255,255,255,0.08)),
+          linear-gradient(45deg, #2f2b27, #b63a2f 46%, #f2d0a4);
         border-radius: 8px;
-        box-shadow: 0 8px 20px rgba(30, 24, 70, 0.08);
+        box-shadow: 0 8px 20px rgba(47, 43, 39, 0.10);
         display: block;
         overflow: hidden;
         position: relative;
@@ -849,14 +849,14 @@
 
       .photo-tile:nth-child(3n) {
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.16), rgba(255,255,255,0.1)),
-          linear-gradient(45deg, #2f80ed, #ffffff 46%, #f06595);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.14), rgba(255,255,255,0.1)),
+          linear-gradient(45deg, #4f6f8f, #ffffff 46%, #d65343);
       }
 
       .photo-tile:nth-child(4n) {
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.18), rgba(255,255,255,0.12)),
-          linear-gradient(45deg, #12b886, #ffd43b 46%, #e03131);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.16), rgba(255,255,255,0.12)),
+          linear-gradient(45deg, #4f7a5a, #f2d0a4 46%, #b63a2f);
       }
 
       .photo-favorite {
@@ -887,9 +887,9 @@
       }
 
       .photo-favorite-button.is-active {
-        background: #fff1f5;
-        border-color: #f783ac;
-        color: #c2255c;
+        background: #fff1ec;
+        border-color: #e6b8b1;
+        color: #8f2a23;
       }
 
       .photo-favorite-button.is-pending,
@@ -900,9 +900,9 @@
       }
 
       .favorite-active {
-        background: #fff1f5;
-        border-color: #f783ac;
-        color: #c2255c;
+        background: #fff1ec;
+        border-color: #e6b8b1;
+        color: #8f2a23;
       }
 
       .favorite-card {
@@ -910,10 +910,10 @@
       }
 
       .favorite-remove {
-        background: rgba(255, 241, 245, 0.96);
-        border: 1px solid #f783ac;
+        background: rgba(255, 241, 236, 0.96);
+        border: 1px solid #e6b8b1;
         border-radius: 999px;
-        color: #c2255c;
+        color: #8f2a23;
         font-weight: 900;
         min-height: 0;
         padding: 6px 9px;
@@ -1008,8 +1008,8 @@
       .photo-hero {
         aspect-ratio: 4 / 3;
         background:
-          linear-gradient(135deg, rgba(91, 53, 213, 0.18), transparent),
-          linear-gradient(45deg, #111827, #f06595 52%, #fff);
+          linear-gradient(135deg, rgba(182, 58, 47, 0.16), transparent),
+          linear-gradient(45deg, #2f2b27, #d65343 52%, #fff);
         border-radius: 14px;
         box-shadow: var(--shadow);
         overflow: hidden;
