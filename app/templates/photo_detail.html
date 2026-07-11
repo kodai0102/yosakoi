@@ -33,6 +33,7 @@
     <div class="panel-body">
       <div class="toolbar">
         <form method="post" action="/photos/{{ photo.id }}/favorite">
+          <input type="hidden" name="redirect_to" value="/photos/{{ photo.id }}">
           {% if photo.is_favorite %}
             <button class="button-secondary favorite-active" type="submit">♥ お気に入り解除</button>
           {% else %}

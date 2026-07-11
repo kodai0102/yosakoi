@@ -483,7 +483,7 @@ async def favorite_photo_form(
     else:
         await record_activity(db, request, "favorite", user=current_user, target_id=str(photo_id))
     is_favorite = not was_favorite
-    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+    if request.headers.get("x-requested-with", "").lower() == "xmlhttprequest":
         return JSONResponse({"is_favorite": is_favorite})
     return RedirectResponse(
         url=redirect_to or f"/photos/{photo_id}",
