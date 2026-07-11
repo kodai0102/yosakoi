@@ -1,7 +1,7 @@
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -48,6 +48,14 @@ from app.services.storage import (
 router = APIRouter(tags=["photos"])
 templates = Jinja2Templates(directory="app/templates")
 UNFAVORITE_PREFIX = "unfavorite:"
+PHOTO_SORT_OPTIONS = {
+    "taken_desc": "撮影日が新しい順",
+    "taken_asc": "撮影日が古い順",
+    "created_desc": "追加日が新しい順",
+    "created_asc": "追加日が古い順",
+    "name_asc": "ファイル名 昇順",
+    "name_desc": "ファイル名 降順",
+}
 
 
 def serialize_photos(photos: list[object]) -> list[dict[str, object]]:
@@ -106,6 +114,52 @@ async def serialize_photos_with_tags(db: AsyncSession, photos: list[object]) -> 
         item["tags_text"] = ", ".join(item["tags"])
         rows.append(item)
     return rows
+
+
+def normalize_photo_sort(sort: str) -> str:
+    if sort in PHOTO_SORT_OPTIONS:
+        return sort
+    return "taken_desc"
+
+
+def sort_photos(photos: list[Photo], sort: str) -> list[Photo]:
+    normalized = normalize_photo_sort(sort)
+    reverse = normalized.endswith("_desc")
+
+    if normalized.startswith("name_"):
+        return sorted(photos, key=lambda photo: photo.file_name.casefold(), reverse=reverse)
+    if normalized.startswith("created_"):
+        return sorted(photos, key=lambda photo: photo.created_at, reverse=reverse)
+    return sorted(photos, key=lambda photo: (photo.taken_at, photo.created_at), reverse=reverse)
+
+
+def filter_photos(
+    photos: list[Photo],
+    tag_map: dict[UUID, list[str]],
+    favorite_ids: set[UUID],
+    keyword: str,
+    tag: str,
+    favorites_only: bool,
+) -> list[Photo]:
+    keyword_value = keyword.strip().casefold()
+    tag_value = tag.strip()
+    rows = []
+    for photo in photos:
+        tag_names = tag_map.get(photo.id, [])
+        if favorites_only and photo.id not in favorite_ids:
+            continue
+        if tag_value and tag_value not in tag_names:
+            continue
+        if keyword_value:
+            searchable_text = " ".join([photo.file_name, *tag_names]).casefold()
+            if keyword_value not in searchable_text:
+                continue
+        rows.append(photo)
+    return rows
+
+
+def album_tag_options(tag_map: dict[UUID, list[str]]) -> list[str]:
+    return sorted({tag for tags in tag_map.values() for tag in tags})
 
 
 def ensure_media_path(object_path: str) -> Path:
@@ -223,22 +277,49 @@ async def is_favorite_photo(db: AsyncSession, user: DeptUser, photo_id: UUID) ->
 async def album_photos_page(
     request: Request,
     album_id: int,
+    q: str = Query("", max_length=100),
+    tag: str = Query("", max_length=80),
+    favorite: bool = Query(False),
+    sort: str = Query("taken_desc"),
     db: AsyncSession = Depends(get_db),
     current_user: DeptUser = Depends(get_current_user),
 ) -> HTMLResponse:
     album = await get_album_or_404(db, album_id)
     if not is_album_published(album):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="アルバムが存在しません")
-    photos = await list_album_photos(db, album.id)
+    all_photos = await list_album_photos(db, album.id)
+    photo_ids = [photo.id for photo in all_photos]
+    tag_map = await get_photo_tags_map(db, photo_ids)
+    favorite_ids = await favorite_photo_id_set(db, current_user, photo_ids)
+    normalized_sort = normalize_photo_sort(sort)
+    filtered_photos = filter_photos(all_photos, tag_map, favorite_ids, q, tag, favorite)
+    photos = sort_photos(filtered_photos, normalized_sort)
+    photo_rows = []
+    for photo in photos:
+        item = serialize_photo(photo)
+        item["is_favorite"] = photo.id in favorite_ids
+        item["tags"] = tag_map.get(photo.id, [])
+        item["tags_text"] = ", ".join(item["tags"])
+        photo_rows.append(item)
     album_data = serialize_album(album)
-    album_data["count"] = len(photos)
+    album_data["count"] = len(all_photos)
     return templates.TemplateResponse(
         "album_photos.html",
         {
             "request": request,
             "current_user": current_user,
             "album": album_data,
-            "photos": await serialize_photos_with_favorites(db, photos, current_user),
+            "photos": photo_rows,
+            "album_tags": album_tag_options(tag_map),
+            "filters": {
+                "q": q.strip(),
+                "tag": tag.strip(),
+                "favorite": favorite,
+                "sort": normalized_sort,
+                "filtered_count": len(photo_rows),
+                "total_count": len(all_photos),
+            },
+            "sort_options": PHOTO_SORT_OPTIONS,
         },
     )
 
@@ -258,6 +339,11 @@ async def photo_detail_page(
     photo_data = serialize_photo(photo)
     photo_data["is_favorite"] = await is_favorite_photo(db, current_user, photo.id)
     photo_data["tags"] = await get_photo_tag_names(db, photo.id)
+    album_photos = await list_album_photos(db, album.id)
+    photo_ids = [album_photo.id for album_photo in album_photos]
+    current_index = photo_ids.index(photo.id) if photo.id in photo_ids else 0
+    previous_photo = album_photos[current_index - 1] if current_index > 0 else None
+    next_photo = album_photos[current_index + 1] if current_index + 1 < len(album_photos) else None
     return templates.TemplateResponse(
         "photo_detail.html",
         {
@@ -265,6 +351,10 @@ async def photo_detail_page(
             "current_user": current_user,
             "album": album_data,
             "photo": photo_data,
+            "previous_photo": serialize_photo(previous_photo) if previous_photo else None,
+            "next_photo": serialize_photo(next_photo) if next_photo else None,
+            "photo_position": current_index + 1,
+            "photo_total": len(album_photos),
         },
     )
 

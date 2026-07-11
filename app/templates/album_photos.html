@@ -6,21 +6,47 @@
 <div class="page-header">
   <div>
     <h1>{{ album.title }}</h1>
-    <p class="page-description">{{ album.period }} / {{ album.count }}枚</p>
+    <p class="page-description">
+      {{ album.period }} / {{ album.count }}枚
+      {% if filters.filtered_count != filters.total_count %}
+        / 表示中 {{ filters.filtered_count }}枚
+      {% endif %}
+    </p>
   </div>
   <a class="button button-secondary" href="/albums">アルバム一覧へ</a>
 </div>
 
-<div class="toolbar">
-  <div class="tag-list">
-    <span class="tag-pill">写真一覧</span>
-    <span class="tag-pill">情報</span>
+<form class="filter-bar photo-filter-bar" method="get" action="/albums/{{ album.id }}">
+  <div class="form-field">
+    <label for="photo-keyword">キーワード</label>
+    <input id="photo-keyword" name="q" type="search" value="{{ filters.q }}" placeholder="ファイル名・タグで検索">
   </div>
-  <div class="nav-links">
-    <button class="button-secondary" type="button">絞り込み</button>
-    <button class="button-secondary" type="button">並び替え</button>
+  <div class="form-field">
+    <label for="photo-tag">タグ</label>
+    <select id="photo-tag" name="tag">
+      <option value="">すべてのタグ</option>
+      {% for tag_name in album_tags %}
+        <option value="{{ tag_name }}" {% if filters.tag == tag_name %}selected{% endif %}>{{ tag_name }}</option>
+      {% endfor %}
+    </select>
   </div>
-</div>
+  <div class="form-field">
+    <label for="photo-sort">並び替え</label>
+    <select id="photo-sort" name="sort">
+      {% for value, label in sort_options.items() %}
+        <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <label class="filter-check">
+    <input name="favorite" type="checkbox" value="true" {% if filters.favorite %}checked{% endif %}>
+    お気に入りのみ
+  </label>
+  <div class="filter-actions">
+    <button class="button" type="submit">絞り込み</button>
+    <a class="button button-secondary" href="/albums/{{ album.id }}">リセット</a>
+  </div>
+</form>
 
 <div class="photo-grid">
   {% for photo in photos %}
@@ -42,6 +68,6 @@
   {% endfor %}
 </div>
 {% if not photos %}
-  <p class="empty-state">このアルバムにはまだ写真がありません。</p>
+  <p class="empty-state">条件に一致する写真がありません。</p>
 {% endif %}
 {% endblock %}

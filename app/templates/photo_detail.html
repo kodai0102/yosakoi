@@ -12,8 +12,20 @@
 </div>
 
 <div class="photo-detail-layout">
-  <section class="photo-hero">
+  <section
+    class="photo-hero photo-swipe"
+    data-prev-url="{% if previous_photo %}/photos/{{ previous_photo.id }}{% endif %}"
+    data-next-url="{% if next_photo %}/photos/{{ next_photo.id }}{% endif %}"
+    aria-label="写真 {{ photo_position }} / {{ photo_total }}"
+  >
+    {% if previous_photo %}
+      <a class="photo-nav-button photo-nav-prev" href="/photos/{{ previous_photo.id }}" aria-label="前の写真へ">‹</a>
+    {% endif %}
     <img src="{{ photo.media_url }}" alt="{{ photo.file_name }}">
+    {% if next_photo %}
+      <a class="photo-nav-button photo-nav-next" href="/photos/{{ next_photo.id }}" aria-label="次の写真へ">›</a>
+    {% endif %}
+    <span class="photo-counter">{{ photo_position }} / {{ photo_total }}</span>
   </section>
   <aside class="panel">
     <div class="panel-body">
