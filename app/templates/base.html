@@ -479,7 +479,12 @@
         color: var(--brand);
       }
 
-      .table-wrap { overflow-x: auto; }
+      .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+      }
 
       table {
         border-collapse: collapse;
@@ -540,7 +545,7 @@
       .log-table td:nth-child(2) { width: 120px; }
 
       .log-table th:nth-child(3),
-      .log-table td:nth-child(3) { width: 150px; }
+      .log-table td:nth-child(3) { width: 190px; }
 
       .log-table th:nth-child(4),
       .log-table td:nth-child(4),
@@ -550,13 +555,28 @@
       .log-table th:nth-child(6),
       .log-table td:nth-child(6) {
         white-space: normal;
-        width: auto;
+        width: 300px;
       }
 
       .log-table th:nth-child(7),
       .log-table td:nth-child(7) {
         text-align: center;
         width: 90px;
+      }
+
+      .download-table {
+        min-width: 980px;
+      }
+
+      .download-table th,
+      .download-table td {
+        white-space: nowrap;
+      }
+
+      .download-table th:nth-child(2),
+      .download-table td:nth-child(2) {
+        min-width: 260px;
+        white-space: normal;
       }
 
       .badge {
@@ -1228,6 +1248,27 @@
         .log-filters select,
         .log-filters input {
           min-width: 0;
+        }
+        .table-wrap {
+          margin: 0 -16px;
+          padding: 0 16px 8px;
+          width: calc(100% + 32px);
+        }
+        .table-wrap table {
+          width: max-content;
+        }
+        .log-table {
+          min-width: 1180px;
+        }
+        .download-table {
+          min-width: 980px;
+        }
+        .log-table th,
+        .log-table td,
+        .download-table th,
+        .download-table td {
+          font-size: 13px;
+          padding: 13px 14px;
         }
         .avatar { display: none; }
         .mobile-account {
