@@ -51,7 +51,18 @@
               <td>{{ log.action_label }}</td>
               <td>{{ log.login_time or "-" }}</td>
               <td>{{ log.logout_time or "-" }}</td>
-              <td>{{ log.target }}</td>
+              <td>
+                {% if log.target_links %}
+                  <div class="log-target-actions">
+                    {% for link in log.target_links %}
+                      <a class="button button-secondary button-compact" href="{{ link.url }}">表示</a>
+                      <span class="log-target-name">{{ link.label }}</span>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  {{ log.target }}
+                {% endif %}
+              </td>
               <td><span class="badge badge-success">成功</span></td>
             </tr>
           {% else %}

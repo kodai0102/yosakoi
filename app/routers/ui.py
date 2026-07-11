@@ -264,14 +264,19 @@ async def replace_photo_download_targets(
         if event["action"] != "photo_download":
             continue
         labels = []
+        links = []
         for raw_id in str(event.get("target") or "").split(","):
             try:
                 photo_id = UUID(raw_id.strip())
             except ValueError:
                 continue
             labels.append(file_names.get(photo_id, raw_id.strip()))
+            if photo_id in file_names:
+                links.append({"label": file_names[photo_id], "url": f"/photos/{photo_id}"})
         if labels:
             event["target"] = ", ".join(labels)
+        if links:
+            event["target_links"] = links
 
 
 async def replace_user_operation_targets(
