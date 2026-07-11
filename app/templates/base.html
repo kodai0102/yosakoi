@@ -528,7 +528,33 @@
       .log-table {
         min-width: 1080px;
         table-layout: fixed;
+        width: 1080px;
       }
+
+      .log-table-wrap {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .log-table-wrap .log-table {
+        min-width: 1080px;
+        width: 1080px;
+      }
+
+      .log-table thead { display: table-header-group; }
+      .log-table tbody { display: table-row-group; }
+      .log-table tr { display: table-row; }
+      .log-table th,
+      .log-table td { display: table-cell; }
+
+      .log-table col.log-col-at { width: 130px; }
+      .log-table col.log-col-user { width: 120px; }
+      .log-table col.log-col-action { width: 160px; }
+      .log-table col.log-col-login { width: 145px; }
+      .log-table col.log-col-logout { width: 145px; }
+      .log-table col.log-col-target { width: 280px; }
+      .log-table col.log-col-result { width: 80px; }
 
       .log-table th,
       .log-table td {
@@ -1276,6 +1302,10 @@
         }
         .table-wrap table {
           width: max-content;
+        }
+        .table-wrap.log-table-wrap .log-table {
+          min-width: 1080px;
+          width: 1080px;
         }
         .log-table {
           min-width: 1080px;

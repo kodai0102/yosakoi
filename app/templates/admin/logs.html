@@ -30,8 +30,17 @@
       </div>
       <span class="meta">{{ logs | length }}件</span>
     </form>
-    <div class="table-wrap">
+    <div class="table-wrap log-table-wrap">
       <table class="log-table">
+        <colgroup>
+          <col class="log-col-at">
+          <col class="log-col-user">
+          <col class="log-col-action">
+          <col class="log-col-login">
+          <col class="log-col-logout">
+          <col class="log-col-target">
+          <col class="log-col-result">
+        </colgroup>
         <thead>
           <tr>
             <th>日時</th>
