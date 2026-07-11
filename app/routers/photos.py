@@ -174,10 +174,12 @@ def ensure_media_path(object_path: str) -> Path:
 
 def image_response(object_path: str, media_type: str | None = None) -> Response:
     payload, stored_media_type = read_object(object_path)
-    return Response(
+    response = Response(
         payload,
         media_type=guess_media_type(object_path, media_type or stored_media_type),
     )
+    response.headers["Cache-Control"] = "private, max-age=86400"
+    return response
 
 
 def photo_media_type(photo: Photo) -> str:
@@ -200,6 +202,7 @@ def inline_image_response(photo: Photo) -> Response:
             path,
             media_type=media_type,
         )
+        response.headers["Cache-Control"] = "private, max-age=86400"
     return response
 
 
@@ -240,7 +243,9 @@ async def media_file(
         return image_response(object_path)
     path = ensure_media_path(object_path)
     media_type = "image/webp" if path.suffix == ".webp" else None
-    return FileResponse(path, media_type=media_type)
+    response = FileResponse(path, media_type=media_type)
+    response.headers["Cache-Control"] = "private, max-age=86400"
+    return response
 
 
 async def record_and_redirect_to_save(

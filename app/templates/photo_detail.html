@@ -16,6 +16,8 @@
     class="photo-hero photo-swipe"
     data-prev-url="{% if previous_photo %}/photos/{{ previous_photo.id }}{% endif %}"
     data-next-url="{% if next_photo %}/photos/{{ next_photo.id }}{% endif %}"
+    data-prev-image-url="{% if previous_photo %}{{ previous_photo.media_url }}{% endif %}"
+    data-next-image-url="{% if next_photo %}{{ next_photo.media_url }}{% endif %}"
     aria-label="写真 {{ photo_position }} / {{ photo_total }}"
   >
     {% if previous_photo %}

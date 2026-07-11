@@ -1595,14 +1595,33 @@
 
           const prevUrl = swipeArea.dataset.prevUrl || "";
           const nextUrl = swipeArea.dataset.nextUrl || "";
+          const prevImageUrl = swipeArea.dataset.prevImageUrl || "";
+          const nextImageUrl = swipeArea.dataset.nextImageUrl || "";
           let startX = 0;
           let startY = 0;
+
+          const canPreloadImages = () => {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (!connection) return true;
+            if (connection.saveData) return false;
+            return !["slow-2g", "2g"].includes(connection.effectiveType);
+          };
+
+          const preloadImage = (url) => {
+            if (!url || !canPreloadImages()) return;
+            const image = new Image();
+            image.decoding = "async";
+            image.src = url;
+          };
 
           const navigate = (url) => {
             if (url) {
               window.location.replace(url);
             }
           };
+
+          preloadImage(nextImageUrl);
+          preloadImage(prevImageUrl);
 
           swipeArea.querySelectorAll("[data-photo-navigation]").forEach((link) => {
             link.addEventListener("click", (event) => {
