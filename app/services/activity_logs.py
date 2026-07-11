@@ -37,14 +37,18 @@ async def record_activity(
     if action_type == "logout" and user is not None:
         result = await db.execute(
             select(AccessLog)
-            .where(AccessLog.user_id == user.login_id, AccessLog.logoff_time.is_(None))
+            .where(
+                AccessLog.user_id == user.login_id,
+                AccessLog.logon_time.is_not(None),
+                AccessLog.logoff_time.is_(None),
+            )
             .order_by(AccessLog.rireki_no.desc())
             .limit(1)
         )
         log = result.scalar_one_or_none()
         if log is None:
-            log = AccessLog(user_name=user.display_name, user_id=user.login_id)
-            db.add(log)
+            return
+        log.user_name = user.display_name
         log.logoff_time = activity_time
         await db.commit()
         return

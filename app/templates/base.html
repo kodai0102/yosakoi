@@ -526,7 +526,7 @@
       }
 
       .log-table {
-        min-width: 1180px;
+        min-width: 1080px;
         table-layout: fixed;
       }
 
@@ -545,23 +545,25 @@
       .log-table td:nth-child(2) { width: 120px; }
 
       .log-table th:nth-child(3),
-      .log-table td:nth-child(3) { width: 190px; }
+      .log-table td:nth-child(3) { width: 160px; }
 
       .log-table th:nth-child(4),
       .log-table td:nth-child(4),
       .log-table th:nth-child(5),
-      .log-table td:nth-child(5) { width: 150px; }
+      .log-table td:nth-child(5) { width: 145px; }
 
       .log-table th:nth-child(6),
       .log-table td:nth-child(6) {
+        overflow-wrap: anywhere;
         white-space: normal;
-        width: 300px;
+        word-break: break-word;
+        width: 280px;
       }
 
       .log-table th:nth-child(7),
       .log-table td:nth-child(7) {
         text-align: center;
-        width: 90px;
+        width: 80px;
       }
 
       .download-table {
@@ -1258,7 +1260,7 @@
           width: max-content;
         }
         .log-table {
-          min-width: 1180px;
+          min-width: 1080px;
         }
         .download-table {
           min-width: 980px;

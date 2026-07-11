@@ -168,7 +168,9 @@ def log_event(
     return {
         "id": log.rireki_no,
         "action": action,
-        "action_label": operation_label(action),
+        "action_label": "ログイン/ログアウト"
+        if action == "login_success" and log.logoff_time is not None
+        else operation_label(action),
         "category": operation_category(action),
         "user": log.user_name or log.user_id or "-",
         "at": display_datetime(at),
@@ -184,7 +186,6 @@ def access_log_events(logs: list[AccessLog]) -> list[dict[str, object]]:
     for log in logs:
         candidates = [
             log_event(log, "login_success", log.logon_time),
-            log_event(log, "logout", log.logoff_time) if log.logon_time is None else None,
             log_event(log, "photo_download", log.pic_download_time, log.pic_download_list),
             log_event(log, "photo_upload", log.pic_upload_time, log.pic_upload_list),
             log_event(
@@ -216,6 +217,8 @@ def filter_log_events(
             filtered = [event for event in filtered if event["category"] == "写真"]
         elif action_filter == "favorite":
             filtered = [event for event in filtered if event["category"] == "お気に入り"]
+        elif action_filter == "logout":
+            filtered = [event for event in filtered if event.get("logout_time")]
         else:
             filtered = [event for event in filtered if event["action"] == action_filter]
 
