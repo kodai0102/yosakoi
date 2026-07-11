@@ -19,11 +19,11 @@
     aria-label="写真 {{ photo_position }} / {{ photo_total }}"
   >
     {% if previous_photo %}
-      <a class="photo-nav-button photo-nav-prev" href="/photos/{{ previous_photo.id }}" aria-label="前の写真へ">‹</a>
+      <a class="photo-nav-button photo-nav-prev" href="/photos/{{ previous_photo.id }}" data-photo-navigation aria-label="前の写真へ">‹</a>
     {% endif %}
     <img src="{{ photo.media_url }}" alt="{{ photo.file_name }}">
     {% if next_photo %}
-      <a class="photo-nav-button photo-nav-next" href="/photos/{{ next_photo.id }}" aria-label="次の写真へ">›</a>
+      <a class="photo-nav-button photo-nav-next" href="/photos/{{ next_photo.id }}" data-photo-navigation aria-label="次の写真へ">›</a>
     {% endif %}
     <span class="photo-counter">{{ photo_position }} / {{ photo_total }}</span>
   </section>

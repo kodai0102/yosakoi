@@ -1472,6 +1472,13 @@
           document.querySelectorAll("[data-back-button]").forEach((button) => {
             button.addEventListener("click", () => {
               const fallback = button.getAttribute("data-back-fallback") || "/albums";
+              if (window.location.pathname.startsWith("/photos/")) {
+                const photoBackUrl = sessionStorage.getItem("photoBackUrl");
+                if (photoBackUrl && photoBackUrl !== window.location.pathname + window.location.search) {
+                  window.location.href = photoBackUrl;
+                  return;
+                }
+              }
               if (document.referrer) {
                 try {
                   const referrerUrl = new URL(document.referrer);
@@ -1484,6 +1491,14 @@
                 }
               }
               window.location.href = fallback;
+            });
+          });
+        })();
+
+        (() => {
+          document.querySelectorAll(".photo-tile").forEach((link) => {
+            link.addEventListener("click", () => {
+              sessionStorage.setItem("photoBackUrl", window.location.pathname + window.location.search);
             });
           });
         })();
@@ -1585,9 +1600,16 @@
 
           const navigate = (url) => {
             if (url) {
-              window.location.href = url;
+              window.location.replace(url);
             }
           };
+
+          swipeArea.querySelectorAll("[data-photo-navigation]").forEach((link) => {
+            link.addEventListener("click", (event) => {
+              event.preventDefault();
+              navigate(link.getAttribute("href"));
+            });
+          });
 
           swipeArea.addEventListener("touchstart", (event) => {
             const touch = event.changedTouches[0];
