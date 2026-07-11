@@ -1517,6 +1517,31 @@
 
         (() => {
           const favoriteForms = Array.from(document.querySelectorAll('form[action^="/photos/"][action$="/favorite"]'));
+          const favoriteStateKey = "yosakoi.favoriteStates";
+
+          const photoIdFromForm = (form) => {
+            const action = form.getAttribute("action") || "";
+            const match = action.match(/^\/photos\/([^/]+)\/favorite$/);
+            return match ? match[1] : "";
+          };
+
+          const loadFavoriteStates = () => {
+            try {
+              return JSON.parse(sessionStorage.getItem(favoriteStateKey) || "{}");
+            } catch (error) {
+              return {};
+            }
+          };
+
+          const saveFavoriteState = (photoId, active) => {
+            if (!photoId) return;
+            const states = loadFavoriteStates();
+            states[photoId] = {
+              isFavorite: active,
+              updatedAt: Date.now(),
+            };
+            sessionStorage.setItem(favoriteStateKey, JSON.stringify(states));
+          };
 
           const isActive = (button) =>
             button.classList.contains("is-active") ||
@@ -1540,12 +1565,39 @@
             button.textContent = active ? "♥ お気に入り解除" : "♡ お気に入り";
           };
 
+          const shouldRemoveFromCurrentList = (form, active) => {
+            if (active) return false;
+            const params = new URLSearchParams(window.location.search);
+            return window.location.pathname.startsWith("/favorites") || params.get("favorite") === "true";
+          };
+
+          const applyFavoriteState = (photoId, active) => {
+            favoriteForms.forEach((form) => {
+              if (photoIdFromForm(form) !== photoId) return;
+              const button = form.querySelector('button[type="submit"]');
+              if (button instanceof HTMLButtonElement) {
+                renderFavoriteButton(button, active);
+              }
+              if (shouldRemoveFromCurrentList(form, active)) {
+                form.closest(".favorite-card, .photo-card")?.remove();
+              }
+            });
+          };
+
+          const applyStoredFavoriteStates = () => {
+            const states = loadFavoriteStates();
+            Object.entries(states).forEach(([photoId, state]) => {
+              applyFavoriteState(photoId, Boolean(state?.isFavorite));
+            });
+          };
+
           favoriteForms.forEach((form) => {
             form.addEventListener("submit", async (event) => {
               event.preventDefault();
               const button = form.querySelector('button[type="submit"]');
               if (!(button instanceof HTMLButtonElement) || button.disabled) return;
 
+              const photoId = photoIdFromForm(form);
               const wasActive = isActive(button);
               const favoriteCard = form.closest(".favorite-card");
               const shouldRemoveCard = Boolean(favoriteCard) && wasActive && window.location.pathname.startsWith("/favorites");
@@ -1571,7 +1623,9 @@
                   throw new Error("favorite update failed");
                 }
                 const data = await response.json();
-                renderFavoriteButton(button, Boolean(data.is_favorite));
+                const isFavorite = Boolean(data.is_favorite);
+                saveFavoriteState(photoId, isFavorite);
+                applyFavoriteState(photoId, isFavorite);
                 if (shouldRemoveCard) {
                   favoriteCard.remove();
                 }
@@ -1587,6 +1641,9 @@
               }
             });
           });
+
+          applyStoredFavoriteStates();
+          window.addEventListener("pageshow", applyStoredFavoriteStates);
         })();
 
         (() => {
